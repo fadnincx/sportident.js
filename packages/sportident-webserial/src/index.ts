@@ -1,1 +1,0 @@
-export {getWebSerialSiDeviceDriver} from './WebSerialSiDeviceDriver';

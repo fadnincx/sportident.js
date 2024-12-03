@@ -1,85 +1,51 @@
 {
-  "name": "sportident-root",
+  "name": "sportident.js",
   "version": "1.0.0",
   "description": "JavaScript interface to SportIdent devices",
-  "main": "src/build/si.node.js",
-  "workspaces": [
-    "packages/sportident",
-    "packages/sportident-example-app",
-    "packages/sportident-node-usb",
-    "packages/sportident-react",
-    "packages/sportident-testbench-client",
-    "packages/sportident-testbench-node",
-    "packages/sportident-testbench-server",
-    "packages/sportident-testbench-shell",
-    "packages/sportident-webusb"
-  ],
-  "config": {
-    "pwd": "${PWD}"
-  },
   "scripts": {
     "build": "tsc -b --verbose && lerna run build",
     "build-docs": "sh build-docs.sh",
     "dependency-check": "dependency-cruise --config=./.dependency-cruiser.js packages/*/src",
-    "lerna": "lerna",
-    "lint": "lerna run eslint",
-    "publish": "tsc -b --verbose && lerna publish",
+    "lint": "eslint",
     "test": "jest; echo \"\n\n  Coverage: file://${PWD}/coverage/lcov-report/index.html\n\n\"",
     "test:ci": "jest --runInBand",
-    "testbench-client": "cd packages/sportident-testbench-client; npm run testbench-client",
-    "testbench-node": "cd packages/sportident-testbench-node; npm run testbench-node",
-    "testbench-server": "cd packages/sportident-testbench-server; npm run testbench-server",
-    "example-app": "tsc -b --verbose; cd packages/sportident-example-app; npm run example-app",
     "tsc-build": "tsc -b --verbose",
     "tsc-clean": "tsc -b --clean"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/allestuetsmerweh/sportident.js.git"
+    "url": "git+https://github.com/fadnincx/sportident.js.git"
   },
   "keywords": [
     "sportident",
     "javascript",
     "js"
   ],
-  "author": "Simon Hatt",
+  "author": "Marcel Würsten",
+  "contributors": [
+    {
+      "name": "Simon Hatt"
+    },
+    {
+      "name": "Marcel Würsten"
+    }
+  ],
   "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/allestuetsmerweh/sportident.js/issues"
+  "dependencies": {
+    "immutable": "^4.0.0-rc.12",
+    "lodash": "^4.17.15"
   },
-  "homepage": "https://github.com/allestuetsmerweh/sportident.js#readme",
+  "bugs": {
+    "url": "https://github.com/fadnincx/sportident.js/issues"
+  },
+  "homepage": "https://github.com/fadnincx/sportident.js#readme",
   "devDependencies": {
-    "@babel/core": "^7.11.6",
-    "@babel/plugin-proposal-class-properties": "^7.10.4",
-    "@babel/plugin-proposal-object-rest-spread": "^7.11.0",
-    "@babel/preset-env": "^7.11.5",
-    "@babel/preset-react": "^7.10.4",
-    "@babel/preset-typescript": "^7.10.4",
-    "@types/jest": "^29.4.0",
-    "@types/lodash": "^4.14.162",
-    "@typescript-eslint/eslint-plugin": "^5.49.0",
-    "@typescript-eslint/parser": "^5.49.0",
-    "babel-jest": "^29.4.1",
-    "babel-loader": "^9.1.2",
-    "css-loader": "^6.7.3",
-    "dependency-cruiser": "^12.6.0",
-    "eslint": "^8.32.0",
-    "eslint-plugin-react": "^7.21.4",
-    "gh-pages": "^5.0.0",
-    "html-webpack-plugin": "^5.5.0",
-    "jasmine-core": "^4.5.0",
-    "jest": "^29.4.1",
-    "jest-environment-jsdom": "^29.4.1",
-    "lerna": "^6.4.1",
-    "node": "^18.13.0",
-    "source-map-loader": "^4.0.1",
-    "style-loader": "^3.3.1",
-    "ts-jest": "^29.0.5",
-    "ts-loader": "^9.4.2",
-    "typedoc": "^0.23.24",
-    "typescript": "^4.0",
-    "webpack": "^5.75.0",
-    "webpack-cli": "^5.0.1",
-    "webpack-dev-server": "^4.11.1"
+    "@types/lodash": "^4.17.13",
+		"@types/w3c-web-serial": "^1.0.7",
+		"@types/w3c-web-usb": "^1.0.10",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
+    "ts-jest": "^29.2.5",
+    "ts-node": "^10.9.2"
   }
 }

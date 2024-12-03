@@ -1,1 +1,0 @@
-export {getWebUsbSiDeviceDriver} from './WebUsbSiDeviceDriver';

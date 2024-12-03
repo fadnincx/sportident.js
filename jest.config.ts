@@ -29,21 +29,21 @@ const jestConfig: Config = {
     maxConcurrency: 1,
     coverageThreshold: {
         global: percentCoverage(10),
-        './packages/sportident/src/': {
+        './src/': {
             branches: 92,
             functions: 89,
             lines: 89,
             statements: 88,
         },
-        './packages/sportident/src/SiCard': percentCoverage(92),
-        './packages/sportident/src/SiDevice': percentCoverage(44),
-        './packages/sportident/src/fakes': percentCoverage(43),
-        './packages/sportident/src/SiStation': percentCoverage(83),
-        './packages/sportident/src/storage': totalCoverage,
-        './packages/sportident/src/utils': totalCoverage,
-        './packages/sportident/src/constants.ts': totalCoverage,
-        './packages/sportident/src/siProtocol.ts': totalCoverage,
-        './packages/sportident/src/testUtils.ts': totalCoverage,
+        './src/SiCard': percentCoverage(92),
+        './src/SiDevice': percentCoverage(44),
+        './src/fakes': percentCoverage(43),
+        './src/SiStation': percentCoverage(83),
+        './src/storage': totalCoverage,
+        './src/utils': totalCoverage,
+        './src/constants.ts': totalCoverage,
+        './src/siProtocol.ts': totalCoverage,
+        './src/testUtils.ts': totalCoverage,
     },
 };
 export default jestConfig;
