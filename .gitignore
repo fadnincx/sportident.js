@@ -7,7 +7,7 @@ docs/testbench/
 docs/typedoc/*
 !docs/typedoc/index.md
 node_modules/
-packages/*/lib
-packages/*/tsconfig.tsbuildinfo
+/lib
+/tsconfig.tsbuildinfo
 
 *.log

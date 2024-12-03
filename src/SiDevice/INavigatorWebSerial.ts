@@ -27,18 +27,6 @@ export interface Serial extends EventTarget {
 	requestPort(options?: SerialPortRequestOptions): Promise<WebSerialDevice>; // Chromium implementation (spec: SerialOptions)
 }
 
-interface Navigator {
-	readonly serial: Serial;
-}
-
-interface RequestDeviceArgs {
-	filters: WebSerialDeviceFilter[];
-}
-
-interface WebSerialDeviceFilter {
-	usbVendorId?: number;
-	usbProductId?: number;
-}
 
 export interface WebSerialDevice {
 	onconnect: EventHandler;

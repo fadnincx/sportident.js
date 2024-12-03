@@ -1,15 +1,28 @@
 {
-  "extends": "./tsconfig.base.json",
-  "files": [],
-  "references": [
-    {"path": "packages/sportident"},
-    {"path": "packages/sportident-example-app"},
-    {"path": "packages/sportident-node-usb"},
-    {"path": "packages/sportident-react"},
-    {"path": "packages/sportident-testbench-client"},
-    {"path": "packages/sportident-testbench-node"},
-    {"path": "packages/sportident-testbench-server"},
-    {"path": "packages/sportident-testbench-shell"},
-    {"path": "packages/sportident-webusb"}
-  ]
+  "compilerOptions": {
+    "lib": ["dom"],
+    "composite": true,
+    "sourceMap": true,
+    "declaration": true,
+    "declarationMap": true,
+    "noImplicitAny": true,
+    "module": "commonjs",
+    "target": "es6",
+    "esModuleInterop": true,
+    "jsx": "react",
+    "allowJs": true,
+    "experimentalDecorators": true,
+    "forceConsistentCasingInFileNames": true,
+    "noImplicitReturns": true,
+    "noUnusedLocals": true,
+    "strict": true,
+    "strictNullChecks": true,
+    "strictPropertyInitialization": true,
+    "rootDir": "./src/",
+    "outDir": "./lib",
+  },
+  "include": [
+    "./src"
+  ],
+  "references": [],
 }

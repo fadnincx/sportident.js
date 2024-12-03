@@ -201,6 +201,7 @@ class WebUsbSiDeviceDriver
 					return navigatorDevice.reset();
 				} catch (e) {
 					console.error('Failed resetting web usb device:', e);
+					return Promise.reject(new Error("Failed resetting web usb device"))
 				}
 			})
 			.catch((_e) => {
@@ -212,6 +213,7 @@ class WebUsbSiDeviceDriver
 					return navigatorDevice.selectConfiguration(siConfiguration);
 				} catch (e) {
 					console.error('Failed selecting configuration of web usb device:', e);
+					return Promise.reject(new Error("Failed selecting configuration of web usb device "+e))
 				}
 			})
 			.catch((_e) => {
@@ -223,6 +225,7 @@ class WebUsbSiDeviceDriver
 					return navigatorDevice.claimInterface(findInterface(navigatorDevice).interfaceNumber);
 				} catch (e) {
 					console.error('Failed claiming web usb device interface:', e);
+					return Promise.reject(new Error("Failed claiming web usb device interface "+e))
 				}
 			})
 			.catch((_e) => {
@@ -234,6 +237,7 @@ class WebUsbSiDeviceDriver
 					return navigatorDevice.selectAlternateInterface(findInterface(navigatorDevice).interfaceNumber, siAlternate);
 				} catch (e) {
 					console.error('Failed selecting alternate interface web usb device:', e);
+					return Promise.reject(new Error("Failed selecting alternate interface web usb device "+e))
 				}
 			})
 			.catch((_e) => {
@@ -251,6 +255,7 @@ class WebUsbSiDeviceDriver
 					});
 				} catch (e) {
 					console.error('Failed enabling serial on web usb device:', e);
+					return Promise.reject(new Error("Failed enabling serial on web usb device "+e))
 				}
 			})
 			.catch((_e) => {
@@ -271,6 +276,7 @@ class WebUsbSiDeviceDriver
 					);
 				} catch (e) {
 					console.error('Failed setting baudrate on web usb device:', e);
+					return Promise.reject(new Error("Failed setting baudrate on web usb device "+e))
 				}
 			})
 			.catch((_e) => {

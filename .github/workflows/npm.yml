@@ -12,6 +12,9 @@ jobs:
           node-version: "20"
       - run: npm ci
       - run: npm test
+      - run: npm run build
+      - run: cp ./{package.json,LICENSE,README.md} lib/
       - uses: JS-DevTools/npm-publish@v3
         with:
           token: ${{ secrets.NPM_TOKEN }}
+          package: lib

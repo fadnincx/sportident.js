@@ -1,11 +1,9 @@
 {
   "name": "sportident.js",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "JavaScript interface to SportIdent devices",
   "scripts": {
-    "build": "tsc -b --verbose && lerna run build",
-    "build-docs": "sh build-docs.sh",
-    "dependency-check": "dependency-cruise --config=./.dependency-cruiser.js packages/*/src",
+    "build": "tsc -b --verbose",
     "lint": "eslint",
     "test": "jest; echo \"\n\n  Coverage: file://${PWD}/coverage/lcov-report/index.html\n\n\"",
     "test:ci": "jest --runInBand",
