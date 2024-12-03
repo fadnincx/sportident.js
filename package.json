@@ -30,7 +30,7 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "immutable": "^4.0.0-rc.12",
+    "immutable": "^5.0.3",
     "lodash": "^4.17.21"
   },
   "bugs": {
