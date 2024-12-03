@@ -145,7 +145,6 @@ export class SiTargetMultiplexer implements ISiTargetMultiplexer {
 	}
 
 	async sendMessage(target: SiTargetMultiplexerTarget, message: siProtocol.SiMessage, numResponses?: number, timeoutInMiliseconds?: number): Promise<number[][]> {
-		console.warn("sendMessage to ",target)
 		return this.setTarget(target).then(() => this.sendMessageToLatestTarget(message, numResponses, timeoutInMiliseconds)).catch(e=>{console.warn(e); return Promise.reject(e)})
 	}
 
@@ -162,7 +161,6 @@ export class SiTargetMultiplexer implements ISiTargetMultiplexer {
 		};
 		const setMsParameter = setMsParameterByTarget[target];
 		if (setMsParameter == undefined) {
-			console.warn("target is undefined, raise error")
 			return Promise.reject(new Error(`No such target: ${target}`));
 		}
 		this.latestTarget = target;
