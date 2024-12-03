@@ -19,12 +19,12 @@ export class CoupledSiStation extends BaseSiStation<SiTargetMultiplexerTarget.Re
 	async getBackupData(turnOff:boolean=true): Promise<{ code: number, cardNumber: number|undefined ; date: Date | undefined}[]> {
 		let backupData: { code: number, cardNumber: number|undefined ; date: Date | undefined}[] = []
 		let backupNextWritePointer:number = 0
+		let hasMemoryOverflow: boolean = false
 
 		// Get backup pointer
 		for(let tries = 0; tries<10 && (backupNextWritePointer == 0 || backupNextWritePointer == undefined); tries++){
 			try{
-				await this.siTargetMultiplexer.sendMessage(
-					SiTargetMultiplexerTarget.Remote,
+				await this.sendMessage(
 					{
 						command: proto.cmd.GET_SYS_VAL,
 						parameters: [0x1c,0x07]
@@ -32,13 +32,11 @@ export class CoupledSiStation extends BaseSiStation<SiTargetMultiplexerTarget.Re
 					1, 10000).then((d) => {
 						backupNextWritePointer = (d[0][3]<<24) | (d[0][4]<<16) | (d[0][8]<<8) | d[0][9]
 					}).catch(async (e) => {
-						await this.siTargetMultiplexer.sendMessage(
-							SiTargetMultiplexerTarget.Remote,
+						await this.sendMessage(
 							{
 								command: proto.WAKEUP,
 								parameters: []
-							}, 
-							0, 10000)
+							})
 						await new Promise( resolve => setTimeout(resolve, 500) );
 					})
 			}catch (e){ // ignore, try again
@@ -47,16 +45,24 @@ export class CoupledSiStation extends BaseSiStation<SiTargetMultiplexerTarget.Re
 		if(backupNextWritePointer == 0 || backupNextWritePointer == undefined){
 			return Promise.reject(new Error("Unable to access coupled si station!"))
 		}
-
+		await this.sendMessage(
+			{
+				command: proto.cmd.GET_SYS_VAL,
+				parameters: [0x3d,0x01]
+			}, 
+			1, 10000).then((d) => {
+				hasMemoryOverflow = d[0][0] != 0
+			}).catch(async (e) => {
+				return Promise.reject(new Error("Unable to read if backup is overflowed or not!"))
+			})
 		
-		let backupReadLocation = 0x0100
+		let backupReadLocation = hasMemoryOverflow?backupNextWritePointer+1:0x0100
 		let backupMaxLocation = 0x200000
 		let backupStorageSize = 128
 		while(backupReadLocation < backupNextWritePointer && backupReadLocation < backupMaxLocation){
 			try{
 				const actualReadLength = Math.min(backupStorageSize,backupNextWritePointer-backupReadLocation)
-				await this.siTargetMultiplexer.sendMessage(
-					SiTargetMultiplexerTarget.Remote,
+				await this.sendMessage(
 					{
 						command: proto.cmd.GET_BACKUP,
 						parameters: [(backupReadLocation>>16)&0xff,(backupReadLocation>>8)&0xff,backupReadLocation&0xff,actualReadLength]
@@ -78,7 +84,7 @@ export class CoupledSiStation extends BaseSiStation<SiTargetMultiplexerTarget.Re
 								d[0][p+7]
 							]
 							let date = siProtocol.arr2date(datedata)
-							if(addr+p<=backupNextWritePointer){
+							if(addr+p<=backupNextWritePointer||hasMemoryOverflow){
 								backupData.push({code:cn,cardNumber:sicard,date:date})
 							}else{
 								break
@@ -86,6 +92,13 @@ export class CoupledSiStation extends BaseSiStation<SiTargetMultiplexerTarget.Re
 							p+=proto.REC_LEN
 						}
 						backupReadLocation += actualReadLength
+
+						// Rotate to start, if overflow
+						if(hasMemoryOverflow && backupReadLocation>=backupMaxLocation){
+							hasMemoryOverflow = false
+							backupReadLocation=0x0100
+						}
+
 					})
 			}catch(e){
 				if(backupStorageSize >= 2*proto.REC_LEN){
@@ -99,8 +112,7 @@ export class CoupledSiStation extends BaseSiStation<SiTargetMultiplexerTarget.Re
 		}
 
 		// Confirm read end with signal
-		await this.siTargetMultiplexer.sendMessage(
-			SiTargetMultiplexerTarget.Remote,
+		await this.sendMessage(
 			{
 				command: proto.cmd.SIGNAL,
 				parameters: [0x2]
@@ -110,8 +122,7 @@ export class CoupledSiStation extends BaseSiStation<SiTargetMultiplexerTarget.Re
 		if(turnOff){
 			await new Promise( resolve => setTimeout(resolve, 250) );
 			for(let tries = 0, hasTurnedOff=false; tries<5&&!hasTurnedOff; tries++){
-				await this.siTargetMultiplexer.sendMessage(
-					SiTargetMultiplexerTarget.Remote,
+				await this.sendMessage(
 					{
 						command: proto.cmd.OFF,
 						parameters: []
