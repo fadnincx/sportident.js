@@ -47,7 +47,7 @@ interface WebUsbAutodetectionCallbacks {
 export type IWebUsbSiDevice = ISiDevice<WebUsbSiDeviceDriverData>;
 export type WebUsbSiDevice = SiDevice<WebUsbSiDeviceDriverData>;
 
-class WebUsbSiDeviceDriver
+export class WebUsbSiDeviceDriver
 	implements ISiDeviceDriver<WebUsbSiDeviceDriverData>, ISiDeviceDriverWithDetection<WebUsbSiDeviceDriverData, []>, ISiDeviceDriverWithAutodetection<WebUsbSiDeviceDriverData>
 {
 	public name = 'WebUSB';
@@ -72,6 +72,10 @@ class WebUsbSiDeviceDriver
 			.catch((e) => {
 				return Promise.reject(new Error('Failed to initialize Si Device! ' + e.toString()));
 			});
+	}
+	
+	getExistingDevices(): Promise<WebUsbSiDevice[]> {
+		return Promise.resolve(Object.values(this.autodetectedSiDevices))
 	}
 
 	getSiDevice(navigatorWebUsbDevice: nav.WebUsbDevice): WebUsbSiDevice {
@@ -343,7 +347,7 @@ class WebUsbSiDeviceDriver
 	}
 }
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
-interface WebUsbSiDeviceDriver extends utils.EventTarget<SiDeviceDriverWithAutodetectionEvents<WebUsbSiDeviceDriverData>> {}
+export interface WebUsbSiDeviceDriver extends utils.EventTarget<SiDeviceDriverWithAutodetectionEvents<WebUsbSiDeviceDriverData>> {}
 utils.applyMixins(WebUsbSiDeviceDriver, [utils.EventTarget]);
 
 export const getWebUsbSiDeviceDriver = (navigatorWebUsb: USB): WebUsbSiDeviceDriver => new WebUsbSiDeviceDriver(<nav.WebUsb>(<unknown>navigatorWebUsb));

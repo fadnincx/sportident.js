@@ -18,7 +18,7 @@ export interface WebSerialSiDeviceDriverData extends ISiDeviceDriverData<WebSeri
 export type IWebSerialSiDevice = ISiDevice<WebSerialSiDeviceDriverData>;
 export type WebSerialSiDevice = SiDevice<WebSerialSiDeviceDriverData>;
 
-class WebSerialSiDeviceDriver implements ISiDeviceDriver<WebSerialSiDeviceDriverData> {
+export class WebSerialSiDeviceDriver implements ISiDeviceDriver<WebSerialSiDeviceDriverData> {
 	public name = 'WebSerial';
 
 	private siDeviceByIdent: { [ident: string]: WebSerialSiDevice } = {};
@@ -49,6 +49,10 @@ class WebSerialSiDeviceDriver implements ISiDeviceDriver<WebSerialSiDeviceDriver
 				this.autodetectedSiDevices[ident] = siDevice;
 				return siDevice.open();
 			});
+	}
+
+	getExistingDevices(): Promise<WebSerialSiDevice[]> {
+		return Promise.resolve(Object.values(this.autodetectedSiDevices))
 	}
 
 	getSiDevice(navigatorWebSerialDevice: nav.WebSerialDevice): WebSerialSiDevice {
@@ -140,7 +144,7 @@ class WebSerialSiDeviceDriver implements ISiDeviceDriver<WebSerialSiDeviceDriver
 	}
 }
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
-interface WebSerialSiDeviceDriver extends utils.EventTarget<SiDeviceDriverWithAutodetectionEvents<WebSerialSiDeviceDriverData>> {}
+export interface WebSerialSiDeviceDriver extends utils.EventTarget<SiDeviceDriverWithAutodetectionEvents<WebSerialSiDeviceDriverData>> {}
 utils.applyMixins(WebSerialSiDeviceDriver, [utils.EventTarget]);
 
 export const getWebSerialSiDeviceDriver = (navigatorWebSerial: Serial): WebSerialSiDeviceDriver => new WebSerialSiDeviceDriver(<nav.Serial>(<unknown>navigatorWebSerial));
