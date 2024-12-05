@@ -1,6 +1,6 @@
 import { describe, expect, test } from '@jest/globals';
 import _ from 'lodash';
-import Immutable from 'immutable';
+import { List } from 'immutable';
 import * as utils from '../utils';
 import { defineStorage } from './SiStorage';
 import { SiFieldValue } from './SiFieldValue';
@@ -19,7 +19,7 @@ describe('storage utils', () => {
 		const weirdStorageFromArray = weirdStorage(utils.unPrettyHex('01 23'));
 		expect(weirdStorageFromArray.locations).toEqual(locations);
 		expect(weirdStorageFromArray.data.toJS()).toEqual(utils.unPrettyHex('01 23'));
-		const weirdStorageFromList = weirdStorage(Immutable.List(utils.unPrettyHex('45 67')));
+		const weirdStorageFromList = weirdStorage(List(utils.unPrettyHex('45 67')));
 		expect(weirdStorageFromList.locations).toEqual(locations);
 		expect(weirdStorageFromList.data.toJS()).toEqual(utils.unPrettyHex('45 67'));
 		const weirdStorageFromUndefined = weirdStorage();

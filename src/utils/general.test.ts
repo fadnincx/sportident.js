@@ -1,6 +1,6 @@
 import { describe, expect, test } from '@jest/globals';
 import _ from 'lodash';
-import Immutable from 'immutable';
+import { List } from 'immutable';
 import * as testUtils from '../testUtils';
 import * as generalUtils from './general';
 
@@ -123,11 +123,11 @@ describe('general utils', () => {
 		expect(generalUtils.binarySearch(listEven, 3)).toBe(3);
 	});
 	test('binarySearch immutable', () => {
-		const options: generalUtils.BinarySearchOptions<Immutable.List<number>, number> = {
+		const options: generalUtils.BinarySearchOptions<List<number>, number> = {
 			getLength: (list) => list.size,
 			getItemAtIndex: (list, index) => list.get(index)
 		};
-		const list = Immutable.List([1, 2, 4]);
+		const list = List([1, 2, 4]);
 		expect(generalUtils.binarySearch(list, -1, options)).toBe(0);
 		expect(generalUtils.binarySearch(list, 0, options)).toBe(0);
 		expect(generalUtils.binarySearch(list, 1, options)).toBe(0);

@@ -1,6 +1,6 @@
 import { describe, expect, test } from '@jest/globals';
 import _ from 'lodash';
-import Immutable from 'immutable';
+import { List } from 'immutable';
 import { ValueToStringError, ValueFromStringError } from './interfaces';
 import { ModifyUndefinedException } from './SiDataType';
 import { SiFieldValue } from './SiFieldValue';
@@ -34,14 +34,14 @@ describe('SiInt', () => {
 		expect(mySiInt.valueFromString('test') instanceof ValueFromStringError).toBe(true);
 	});
 	test('extractFromData gives field value', () => {
-		const data = Immutable.List([0x00, 0x00]);
+		const data = List([0x00, 0x00]);
 		const fieldValue = mySiInt.extractFromData(data);
 		expect(fieldValue instanceof SiFieldValue).toBe(true);
 		expect(fieldValue!.field).toBe(mySiInt);
 		expect(fieldValue!.value).toBe(0);
 	});
 	test('extractFromData', () => {
-		const getExtractedFieldValue = (bytes: FakeSiStorageData) => mySiInt.extractFromData(Immutable.List(bytes));
+		const getExtractedFieldValue = (bytes: FakeSiStorageData) => mySiInt.extractFromData(List(bytes));
 
 		expect(getExtractedFieldValue([0x00, 0x00])!.value).toBe(0x000);
 		expect(getExtractedFieldValue([0x0f, 0x00])!.value).toBe(0x00f);
@@ -55,7 +55,7 @@ describe('SiInt', () => {
 		expect(getExtractedFieldValue([])).toBe(undefined);
 	});
 	test('updateData', () => {
-		const initialData = Immutable.List([0x00, 0x00]);
+		const initialData = List([0x00, 0x00]);
 		const updateInitialData = (newValue: number | SiFieldValue<number>): FakeSiStorageData => mySiInt.updateData(initialData, newValue).toJS();
 
 		expect(updateInitialData(0x000)).toEqual([0x00, 0x00]);
@@ -67,7 +67,7 @@ describe('SiInt', () => {
 		expect(updateInitialData(fieldValueOf(0x7357))).toEqual([0x57, 0x30]);
 	});
 	test('updateData modify undefined', () => {
-		const updateData = (data: FakeSiStorageData, newValue: number | SiFieldValue<number>): FakeSiStorageData => mySiInt.updateData(Immutable.List(data), newValue).toJS();
+		const updateData = (data: FakeSiStorageData, newValue: number | SiFieldValue<number>): FakeSiStorageData => mySiInt.updateData(List(data), newValue).toJS();
 
 		expect(() => updateData([], 0x000)).toThrow(ModifyUndefinedException);
 		expect(() => updateData([], 0xcab)).toThrow(ModifyUndefinedException);

@@ -1,6 +1,6 @@
-import Immutable from 'immutable';
+import { Record } from 'immutable';
 
-export class NumberRange extends Immutable.Record({
+export class NumberRange extends Record({
 	start: 0,
 	end: 0
 }) {

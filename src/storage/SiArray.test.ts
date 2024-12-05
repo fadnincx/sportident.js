@@ -1,6 +1,6 @@
 import { describe, expect, test } from '@jest/globals';
 import _ from 'lodash';
-import Immutable from 'immutable';
+import { List } from 'immutable';
 import { type ISiStorageData, ValueFromStringError } from './interfaces';
 import { ModifyUndefinedException, SiDataType } from './SiDataType';
 import { SiFieldValue } from './SiFieldValue';
@@ -58,14 +58,14 @@ describe('SiArray', () => {
 		expect(mySiArray.valueFromString('test') instanceof ValueFromStringError).toBe(true);
 	});
 	test('extractFromData gives field value', () => {
-		const data = Immutable.List([0x41, 0x42, 0x43]);
+		const data = List([0x41, 0x42, 0x43]);
 		const fieldValue = mySiArray.extractFromData(data);
 		expect(fieldValue instanceof SiFieldValue).toBe(true);
 		expect(fieldValue!.field).toBe(mySiArray);
 		expect(fieldValue!.value).toEqual(['A', 'B', 'C']);
 	});
 	test('extractFromData', () => {
-		const getExtractedFieldValue = (bytes: (number | undefined)[]) => mySiArray.extractFromData(Immutable.List(bytes));
+		const getExtractedFieldValue = (bytes: (number | undefined)[]) => mySiArray.extractFromData(List(bytes));
 
 		expect(getExtractedFieldValue([0x61, 0x62, 0x63])!.value).toEqual(['a', 'b', 'c']);
 		expect(getExtractedFieldValue([undefined, 0x62, 0x63])!.value).toEqual([undefined, 'b', 'c']);
@@ -76,7 +76,7 @@ describe('SiArray', () => {
 		expect(getExtractedFieldValue([])!.value).toEqual([undefined, undefined, undefined]);
 	});
 	test('updateData', () => {
-		const initialData = Immutable.List([0x00, 0x00, 0x00]);
+		const initialData = List([0x00, 0x00, 0x00]);
 		const updateInitialData = (newValue: (string | undefined)[] | SiFieldValue<(string | undefined)[]>) => mySiArray.updateData(initialData, newValue).toJS();
 
 		expect(updateInitialData(['x', 'y', 'z'])).toEqual([0x78, 0x79, 0x7a]);
@@ -87,7 +87,7 @@ describe('SiArray', () => {
 		expect(updateInitialData(fieldValueOf(['x', 'y', 'z']))).toEqual([0x78, 0x79, 0x7a]);
 	});
 
-	const updateData = (data: (number | undefined)[], newValue: (string | undefined)[] | SiFieldValue<(string | undefined)[]>) => mySiArray.updateData(Immutable.List(data), newValue).toJS();
+	const updateData = (data: (number | undefined)[], newValue: (string | undefined)[] | SiFieldValue<(string | undefined)[]>) => mySiArray.updateData(List(data), newValue).toJS();
 	test('updateData modify undefined', () => {
 		expect(() => updateData([], ['x', 'y', 'z'])).toThrow(ModifyUndefinedException);
 		expect(() => updateData([], ['x'])).toThrow(ModifyUndefinedException);

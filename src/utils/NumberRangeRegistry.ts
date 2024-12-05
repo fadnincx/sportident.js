@@ -1,10 +1,10 @@
-import Immutable from 'immutable';
+import { List } from 'immutable';
 import * as generalUtils from './general';
 import type { NumberRange } from './NumberRange';
 
 export class NumberRangeRegistry<T> {
-	public numberRanges: Immutable.List<NumberRange> = Immutable.List();
-	public values: Immutable.List<T> = Immutable.List();
+	public numberRanges: List<NumberRange> = List();
+	public values: List<T> = List();
 
 	register(numberRange: NumberRange, value: T): void {
 		const index = generalUtils.binarySearch(this.numberRanges, numberRange, {

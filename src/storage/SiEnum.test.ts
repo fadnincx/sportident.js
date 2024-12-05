@@ -1,6 +1,6 @@
 import { describe, expect, test } from '@jest/globals';
 import _ from 'lodash';
-import Immutable from 'immutable';
+import { List } from 'immutable';
 import { ValueFromStringError } from './interfaces';
 import { SiFieldValue } from './SiFieldValue';
 import { ModifyUndefinedException } from './SiDataType';
@@ -37,14 +37,14 @@ describe('SiEnum', () => {
 		expect(mySiEnum.valueFromString('test') instanceof ValueFromStringError).toBe(true);
 	});
 	test('extractFromData gives field value', () => {
-		const data = Immutable.List([0x00]);
+		const data = List([0x00]);
 		const fieldValue = mySiEnum.extractFromData(data);
 		expect(fieldValue instanceof SiFieldValue).toBe(true);
 		expect(fieldValue!.field).toBe(mySiEnum);
 		expect(fieldValue!.value).toBe('Zero');
 	});
 	test('extractFromData', () => {
-		const getExtractedFieldValue = (bytes: FakeSiStorageData) => mySiEnum.extractFromData(Immutable.List(bytes));
+		const getExtractedFieldValue = (bytes: FakeSiStorageData) => mySiEnum.extractFromData(List(bytes));
 
 		expect(getExtractedFieldValue([0x00])!.value).toBe('Zero');
 		expect(getExtractedFieldValue([0x10])!.value).toBe('One');
@@ -54,7 +54,7 @@ describe('SiEnum', () => {
 		expect(getExtractedFieldValue([])).toBe(undefined);
 	});
 	test('updateData', () => {
-		const updateData = (data: FakeSiStorageData, newValue: MySiEnumType | SiFieldValue<MySiEnumType>): FakeSiStorageData => mySiEnum.updateData(Immutable.List(data), newValue).toJS();
+		const updateData = (data: FakeSiStorageData, newValue: MySiEnumType | SiFieldValue<MySiEnumType>): FakeSiStorageData => mySiEnum.updateData(List(data), newValue).toJS();
 
 		expect(updateData([0xff], 'Zero')).toEqual([0xcf]);
 		expect(updateData([0xff], 'One')).toEqual([0xdf]);
@@ -67,7 +67,7 @@ describe('SiEnum', () => {
 		expect(updateData([0xfe], fieldValueOf('Zero'))).toEqual([0xce]);
 	});
 	test('updateData modify undefined', () => {
-		const updateData = (data: FakeSiStorageData, newValue: MySiEnumType | SiFieldValue<MySiEnumType>): FakeSiStorageData => mySiEnum.updateData(Immutable.List(data), newValue).toJS();
+		const updateData = (data: FakeSiStorageData, newValue: MySiEnumType | SiFieldValue<MySiEnumType>): FakeSiStorageData => mySiEnum.updateData(List(data), newValue).toJS();
 
 		expect(() => updateData([], 'Zero')).toThrow(ModifyUndefinedException);
 		expect(() => updateData([], 'Three')).toThrow(ModifyUndefinedException);

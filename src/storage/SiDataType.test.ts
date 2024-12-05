@@ -1,6 +1,6 @@
 import { describe, expect, test } from '@jest/globals';
 import _ from 'lodash';
-import Immutable from 'immutable';
+import { List } from 'immutable';
 import { type ISiStorageData, ValueFromStringError } from './interfaces';
 import { SiFieldValue } from './SiFieldValue';
 import { SiDataType } from './SiDataType';
@@ -45,14 +45,14 @@ describe('SiDataType', () => {
 		expect(myField.valueFromString('41') instanceof ValueFromStringError).toBe(true);
 	});
 	test('extractFromData', () => {
-		const getExtractedFieldValue = (field: SiDataType<number>, bytes: (number | undefined)[]) => field.extractFromData(Immutable.List(bytes));
+		const getExtractedFieldValue = (field: SiDataType<number>, bytes: (number | undefined)[]) => field.extractFromData(List(bytes));
 
 		expect(getExtractedFieldValue(myField, [0x61])!.value).toBe(0x61);
 		expect(getExtractedFieldValue(myField, [undefined])).toBe(undefined);
 		expect(getExtractedFieldValue(myField, [])).toBe(undefined);
 	});
 	test('updateData', () => {
-		const updateData = (field: SiDataType<number>, data: number[], newValue: number | SiFieldValue<number>): number[] => field.updateData(Immutable.List(data), newValue).toJS() as number[];
+		const updateData = (field: SiDataType<number>, data: number[], newValue: number | SiFieldValue<number>): number[] => field.updateData(List(data), newValue).toJS() as number[];
 
 		expect(updateData(myField, [0x00], 0x61)).toEqual([0x61]);
 		expect(updateData(myField, [0x00], fieldValueOf(0x61))).toEqual([0x61]);

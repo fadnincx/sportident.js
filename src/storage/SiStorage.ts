@@ -1,14 +1,14 @@
 import _ from 'lodash';
-import Immutable from 'immutable';
+import { List } from 'immutable';
 import type { ISiFieldValue, ISiStorage, ISiStorageData, ISiStorageDefinition, ISiStorageLocations } from './interfaces';
 
 export class SiStorage<T> implements ISiStorage<T> {
 	private internalData: ISiStorageData;
 
 	// eslint-disable-next-line no-useless-constructor
-	constructor(public readonly size: number, public readonly locations: ISiStorageLocations<T>, initArg?: Immutable.List<number | undefined> | Array<number | undefined>) {
-		const initArrayOrList = (initArg === undefined ? _.range(size).map(() => undefined) : initArg) as Immutable.List<number | undefined> | Array<number | undefined>;
-		const initList = (initArrayOrList instanceof Immutable.List ? initArrayOrList : Immutable.List(initArrayOrList)) as Immutable.List<number | undefined>;
+	constructor(public readonly size: number, public readonly locations: ISiStorageLocations<T>, initArg?: List<number | undefined> | Array<number | undefined>) {
+		const initArrayOrList = (initArg === undefined ? _.range(size).map(() => undefined) : initArg) as List<number | undefined> | Array<number | undefined>;
+		const initList = (initArrayOrList instanceof List ? initArrayOrList : List(initArrayOrList)) as List<number | undefined>;
 		if (initList.size !== size) {
 			throw new Error(`SiStorage constructor list "${initArg}" => "${initList}" ` + `must have size ${size} (but is ${initList.size})`);
 		}
@@ -40,5 +40,5 @@ export class SiStorage<T> implements ISiStorage<T> {
 
 export const defineStorage =
 	<T>(size: number, locations: ISiStorageLocations<T>): ISiStorageDefinition<T> =>
-	(initArg?: Immutable.List<number | undefined> | Array<number | undefined>): ISiStorage<T> =>
+	(initArg?: List<number | undefined> | Array<number | undefined>): ISiStorage<T> =>
 		new SiStorage<T>(size, locations, initArg);

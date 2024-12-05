@@ -1,6 +1,6 @@
 import { describe, expect, test } from '@jest/globals';
 import _ from 'lodash';
-import Immutable from 'immutable';
+import { List } from 'immutable';
 import { proto } from './constants';
 import * as utils from './utils';
 import * as storage from './storage';
@@ -406,14 +406,14 @@ describe('siProtocol', () => {
 			expect(mySiDate.valueFromString('test') instanceof storage.ValueFromStringError).toBe(true);
 		});
 		test('extractFromData gives field value', () => {
-			const data = Immutable.List([0x00, 0x01, 0x01]);
+			const data = List([0x00, 0x01, 0x01]);
 			const fieldValue = mySiDate.extractFromData(data);
 			expect(fieldValue instanceof storage.SiFieldValue).toBe(true);
 			expect(fieldValue!.field).toBe(mySiDate);
 			expect(fieldValue!.value).toEqual(json2date('2000-01-01T00:00:00.000Z')!);
 		});
 		test('extractFromData', () => {
-			const getExtractedFieldValue = (bytes: (number | undefined)[]) => mySiDate.extractFromData(Immutable.List(bytes));
+			const getExtractedFieldValue = (bytes: (number | undefined)[]) => mySiDate.extractFromData(List(bytes));
 			expect(getExtractedFieldValue([0x00, 0x01, 0x01])!.value instanceof Date).toBe(true);
 			expect(getExtractedFieldValue([0x00, 0x01, undefined])).toBe(undefined);
 			expect(getExtractedFieldValue([0x00, undefined, 0x01])).toBe(undefined);
@@ -422,14 +422,14 @@ describe('siProtocol', () => {
 			expect(getExtractedFieldValue([])).toBe(undefined);
 		});
 		test('updateData', () => {
-			const initialData = Immutable.List([0x00, 0x00, 0x00]);
+			const initialData = List([0x00, 0x00, 0x00]);
 			const updateInitialData = (newValue: Date | storage.SiFieldValue<Date>) => mySiDate.updateData(initialData, newValue).toJS();
 
 			expect(updateInitialData(json2date('2000-01-01T00:00:00.000Z')!)).toEqual([0x00, 0x01, 0x01]);
 			expect(updateInitialData(fieldValueOf(json2date('2000-01-01T00:00:00.000Z')!))).toEqual([0x00, 0x01, 0x01]);
 		});
 		test('updateData modify undefined', () => {
-			const updateData = (data: (number | undefined)[], newValue: Date | storage.SiFieldValue<Date>) => mySiDate.updateData(Immutable.List(data), newValue).toJS();
+			const updateData = (data: (number | undefined)[], newValue: Date | storage.SiFieldValue<Date>) => mySiDate.updateData(List(data), newValue).toJS();
 
 			expect(() => updateData([], json2date('2000-01-01T00:00:00.000Z')!)).toThrow(storage.ModifyUndefinedException);
 			expect(() => updateData([], fieldValueOf(json2date('2000-01-01T00:00:00.000Z')!))).toThrow(storage.ModifyUndefinedException);
@@ -462,14 +462,14 @@ describe('siProtocol', () => {
 			expect(mySiTime.valueFromString('test') instanceof storage.ValueFromStringError).toBe(true);
 		});
 		test('extractFromData gives field value', () => {
-			const data = Immutable.List([0x01, 0x01]);
+			const data = List([0x01, 0x01]);
 			const fieldValue = mySiTime.extractFromData(data);
 			expect(fieldValue instanceof storage.SiFieldValue).toBe(true);
 			expect(fieldValue!.field).toBe(mySiTime);
 			expect(JSON.stringify(fieldValue!.value)).toBe(JSON.stringify({time:257, weekcounter: undefined, weekday: undefined}));
 		});
 		test('extractFromData', () => {
-			const getExtractedFieldValue = (bytes: (number | undefined)[]) => mySiTime.extractFromData(Immutable.List(bytes));
+			const getExtractedFieldValue = (bytes: (number | undefined)[]) => mySiTime.extractFromData(List(bytes));
 			expect(JSON.stringify(getExtractedFieldValue([0x00, 0x01])!.value)).toBe(JSON.stringify({time:1, weekcounter: undefined, weekday: undefined}));
 			expect(getExtractedFieldValue([0xee, 0xee])!.value).toBe(null);
 			expect(getExtractedFieldValue([0x00, undefined])).toBe(undefined);
@@ -478,11 +478,11 @@ describe('siProtocol', () => {
 			expect(getExtractedFieldValue([])).toBe(undefined);
 		});
 		test('extractFromData for inexistent', () => {
-			const getExtractedFieldValue = (bytes: (number | undefined)[]) => myInexistentSiTime.extractFromData(Immutable.List(bytes));
+			const getExtractedFieldValue = (bytes: (number | undefined)[]) => myInexistentSiTime.extractFromData(List(bytes));
 			expect(getExtractedFieldValue([0x00, 0x01])!.value).toBe(null);
 		});
 		test('updateData', () => {
-			const initialData = Immutable.List([0x00, 0x00]);
+			const initialData = List([0x00, 0x00]);
 			const updateInitialData = (newValue: siProtocol.SiTimestamp | storage.SiFieldValue<siProtocol.SiTimestamp>) => mySiTime.updateData(initialData, newValue).toJS();
 
 			expect(updateInitialData({time:257})).toEqual([0x01, 0x01]);
@@ -491,14 +491,14 @@ describe('siProtocol', () => {
 			expect(updateInitialData(fieldValueOf(null))).toEqual([0xee, 0xee]);
 		});
 		test('updateData for inexistent', () => {
-			const initialData = Immutable.List([0x00, 0x00]);
+			const initialData = List([0x00, 0x00]);
 			const updateInitialData = (newValue: siProtocol.SiTimestamp | storage.SiFieldValue<siProtocol.SiTimestamp>) => myInexistentSiTime.updateData(initialData, newValue).toJS();
 
 			expect(updateInitialData({time:257})).toEqual([0x00, 0x00]);
 			expect(updateInitialData(fieldValueOf({time:257}))).toEqual([0x00, 0x00]);
 		});
 		test('updateData modify undefined', () => {
-			const updateData = (data: (number | undefined)[], newValue: siProtocol.SiTimestamp | storage.SiFieldValue<siProtocol.SiTimestamp>) => mySiTime.updateData(Immutable.List(data), newValue).toJS();
+			const updateData = (data: (number | undefined)[], newValue: siProtocol.SiTimestamp | storage.SiFieldValue<siProtocol.SiTimestamp>) => mySiTime.updateData(List(data), newValue).toJS();
 
 			expect(() => updateData([], {time:257})).toThrow(storage.ModifyUndefinedException);
 			expect(() => updateData([], fieldValueOf({time:257}))).toThrow(storage.ModifyUndefinedException);
