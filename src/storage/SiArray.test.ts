@@ -1,5 +1,4 @@
 import { describe, expect, test } from '@jest/globals';
-import _ from 'lodash';
 import { List } from 'immutable';
 import { type ISiStorageData, ValueFromStringError } from './interfaces';
 import { ModifyUndefinedException, SiDataType } from './SiDataType';

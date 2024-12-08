@@ -1,5 +1,4 @@
 import { describe, expect, test } from '@jest/globals';
-import _ from 'lodash';
 import type * as siProtocol from '../siProtocol';
 import * as testUtils from '../testUtils';
 import { proto } from '../constants';
@@ -33,7 +32,7 @@ describe('SiStation', () => {
 					numResponses: numResponses
 				});
 				if (command === proto.cmd.GET_SYS_VAL) {
-					return Promise.resolve([[0x00, 0x00, 0x00, ..._.range(128)]]);
+					return Promise.resolve([[0x00, 0x00, 0x00, ...Array.from({length: 128}, (_, i) => i)]]);
 				}
 				if (command === proto.cmd.SET_SYS_VAL) {
 					return Promise.resolve([[0x00, 0x00, 0x72]]);
@@ -45,7 +44,7 @@ describe('SiStation', () => {
 		mySiStation.readInfo().then(() => {
 			timeState.infoHasBeenRead = true;
 		});
-		expect(mySiStation.storage.data.toJS()).toEqual(_.range(128).map(() => undefined));
+		expect(mySiStation.storage.data.toJS()).toEqual(Array.from({length: 128}, (_, i) => i).map(() => undefined));
 		expect(mySiStation.getField('code') instanceof SiDataType).toBe(true);
 		expect(mySiStation.getInfo('code')).toBe(undefined);
 
@@ -59,7 +58,7 @@ describe('SiStation', () => {
 			}
 		]);
 		expect(timeState).toEqual({ infoHasBeenRead: true, changesHaveBeenWritten: false });
-		expect(mySiStation.storage.data.toJS()).toEqual(_.range(128));
+		expect(mySiStation.storage.data.toJS()).toEqual(Array.from({length: 128}, (_, i) => i));
 		expect(mySiStation.getInfo('code')).not.toBe(undefined);
 		expect(mySiStation.setInfo('code', 0)).toBe(undefined);
 		expect(mySiStation.getInfo('code')!.value).toBe(0);

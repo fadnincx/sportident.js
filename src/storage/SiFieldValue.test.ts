@@ -1,5 +1,4 @@
 import { describe, expect, test } from '@jest/globals';
-import _ from 'lodash';
 import { type ISiDataType, type ISiStorageData, ValueToStringError, ValueFromStringError } from './interfaces';
 import { SiDataType } from './SiDataType';
 import { SiFieldValue } from './SiFieldValue';
@@ -19,7 +18,7 @@ describe('SiFieldValue', () => {
 
 		typeSpecificValueFromString(string: string) {
 			const value = parseInt(string, 10);
-			return _.isInteger(value) ? value : new ValueFromStringError();
+			return Number.isInteger(value) ? value : new ValueFromStringError();
 		}
 
 		typeSpecificExtractFromData(_data: ISiStorageData): number {

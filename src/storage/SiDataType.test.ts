@@ -1,5 +1,4 @@
 import { describe, expect, test } from '@jest/globals';
-import _ from 'lodash';
 import { List } from 'immutable';
 import { type ISiStorageData, ValueFromStringError } from './interfaces';
 import { SiFieldValue } from './SiFieldValue';
@@ -8,7 +7,7 @@ import { SiDataType } from './SiDataType';
 describe('SiDataType', () => {
 	class MyType extends SiDataType<number> {
 		typeSpecificIsValueValid(value: number): boolean {
-			return _.isInteger(value);
+			return Number.isInteger(value);
 		}
 
 		typeSpecificValueToString(value: number): string {

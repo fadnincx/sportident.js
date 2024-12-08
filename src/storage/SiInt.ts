@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import type { ISiDataType, ISiStorageData } from './interfaces';
 import { ValueFromStringError } from './interfaces';
 
@@ -25,7 +24,7 @@ export class SiInt extends SiDataType<number> implements ISiDataType<number> {
 	}
 
 	typeSpecificIsValueValid(value: number): boolean {
-		return _.isInteger(value) && value >= 0;
+		return Number.isInteger(value) && value >= 0;
 	}
 
 	typeSpecificValueToString(value: number): string {
@@ -34,7 +33,7 @@ export class SiInt extends SiDataType<number> implements ISiDataType<number> {
 
 	typeSpecificValueFromString(string: string): number | ValueFromStringError {
 		const intValue = parseInt(string, 10);
-		if (!_.isInteger(intValue)) {
+		if (!Number.isInteger(intValue)) {
 			return new ValueFromStringError(`Value for SiInt must be integer, not "${string}"`);
 		}
 		return intValue;

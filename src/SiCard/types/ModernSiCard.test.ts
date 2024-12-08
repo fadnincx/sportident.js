@@ -1,5 +1,4 @@
 import { describe, expect, test } from '@jest/globals';
-import _ from 'lodash';
 import * as utils from '../../utils';
 import type * as siProtocol from '../../siProtocol';
 import { cropPunches, getCroppedString, getPunchOffset, ModernSiCard, ModernSiCardSeries, parseCardHolder, parseCardHolderString } from './ModernSiCard';
@@ -149,7 +148,7 @@ describe('ModernSiCard', () => {
 		let typeSpecificReadCardHolderCalled = false;
 		class ModernSiCardWithoutCardHolder extends ModernSiCard {
 			typeSpecificGetPage() {
-				return Promise.resolve(_.range(128).map(() => 0x00));
+				return Promise.resolve(Array.from({length: 128}, (_, i) => i).map(() => 0x00));
 			}
 
 			typeSpecificReadCardHolder() {
@@ -173,7 +172,7 @@ describe('ModernSiCard', () => {
 					attemptedToGetPage4 = true;
 					return Promise.reject(testError);
 				}
-				return Promise.resolve(_.range(128).map(() => 0x01));
+				return Promise.resolve(Array.from({length: 128}, (_, i) => i).map(() => 0x01));
 			}
 		}
 		const myModernSiCard = new ModernSiCardWithoutCardHolder(7123456);

@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import { proto } from '../../constants';
 import * as storage from '../../storage';
 import * as utils from '../../utils';
@@ -83,7 +82,7 @@ export const modernSiCardStorageLocations: storage.ISiStorageLocations<IModernSi
 		// (cardNumber) => siProtocol.cardNumber2arr(cardNumber),
 		// (cardNumber) => `${cardNumber}`,
 		// (cardNumberString) => parseInt(cardNumberString, 10),
-		// (cardNumber) => cardNumber !== undefined && _.isInteger(cardNumber) && cardNumber >= 0,
+		// (cardNumber) => cardNumber !== undefined && Number.isInteger(cardNumber) && cardNumber >= 0,
 	),
 	startTime: new siProtocol.SiTime([[0x0f], [0x0e], [0x0c]]),
 	finishTime: new siProtocol.SiTime([[0x13], [0x12], [0x10]]),

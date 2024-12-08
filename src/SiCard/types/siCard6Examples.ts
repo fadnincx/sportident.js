@@ -1,10 +1,9 @@
-import _ from 'lodash';
 import * as utils from '../../utils';
 import type { SiCardSample } from '../ISiCardExamples';
 
 const cache = {};
 
-const getUnknownPage = utils.cached(cache, () => _.range(128).map(() => undefined));
+const getUnknownPage = utils.cached(cache, () => Array.from({length: 128}, (_, i) => i).map(() => undefined));
 const getFullTimesPage1 = utils.cached(cache, () =>
 	utils.unPrettyHex(`
         20 01 00 01 20 02 00 02 20 03 00 03 20 04 00 04
@@ -52,7 +51,7 @@ export const getCardWith16Punches = utils.cached(cache, () => ({
 		lastPunchedCode: 46,
 		punchCount: 16,
 		punchCountPlus1: 17,
-		punches: _.range(16).map((index: number) => ({
+		punches: Array.from({length: 16}, (_, i) => i).map((index: number) => ({
 			code: index + 1,
 			time: {time: Math.floor(index / 4) * (256 - 4) + index + 1, weekcounter: 2, weekday: 0}
 		})),
@@ -121,7 +120,7 @@ export const getFullCard = utils.cached(cache, () => ({
 		lastPunchedCode: 32,
 		punchCount: 64,
 		punchCountPlus1: 65,
-		punches: _.range(64).map((index: number) => ({
+		punches: Array.from({length: 64}, (_, i) => i).map((index: number) => ({
 			code: index + 1,
 			time: {time: Math.floor(index / 4) * (256 - 4) + index + 1, weekcounter: 2, weekday: 0}
 		})),
@@ -181,7 +180,7 @@ export const getPartialCardHolderCard = utils.cached(cache, () => ({
 		lastPunchedCode: 32,
 		punchCount: 64,
 		punchCountPlus1: 65,
-		punches: _.range(64).map((index: number) => ({
+		punches: Array.from({length: 64}, (_, i) => i).map((index: number) => ({
 			code: index + 1,
 			time: {time: Math.floor(index / 4) * (256 - 4) + index + 1, weekcounter: 2, weekday: 0}
 		})),

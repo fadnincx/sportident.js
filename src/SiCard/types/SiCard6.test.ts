@@ -1,5 +1,4 @@
 import { describe, expect, test } from '@jest/globals';
-import _ from 'lodash';
 import { proto } from '../../constants';
 import type * as siProtocol from '../../siProtocol';
 import * as testUtils from '../../testUtils';
@@ -142,7 +141,7 @@ describe('SiCard6', () => {
 		let typeSpecificReadCardHolderCalled = false;
 		class SiCard6WithoutCardHolder extends SiCard6 {
 			typeSpecificGetPage() {
-				return Promise.resolve(_.range(128).map(() => 0x00));
+				return Promise.resolve(Array.from({length: 128}, (_, i) => i).map(() => 0x00));
 			}
 
 			typeSpecificReadCardHolder() {
@@ -166,7 +165,7 @@ describe('SiCard6', () => {
 					attemptedToGetPage6 = true;
 					return Promise.reject(testError);
 				}
-				return Promise.resolve(_.range(128).map(() => 0x01));
+				return Promise.resolve(Array.from({length: 128}, (_, i) => i).map(() => 0x01));
 			}
 		}
 		const myModernSiCard = new SiCard6WithoutCardHolder(7123456);

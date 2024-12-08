@@ -1,5 +1,4 @@
 import { describe, expect, test } from '@jest/globals';
-import _ from 'lodash';
 import { List } from 'immutable';
 import * as testUtils from '../testUtils';
 import * as generalUtils from './general';
@@ -18,8 +17,8 @@ describe('general utils', () => {
 			numGettersCalled.bar += 1;
 			return 'bar';
 		});
-		expect(_.isFunction(getFoo)).toBe(true);
-		expect(_.isFunction(getBar)).toBe(true);
+		expect(typeof getFoo === "function").toBe(true);
+		expect(typeof getBar === "function").toBe(true);
 		expect(numGettersCalled).toEqual({ foo: 0, bar: 0 });
 		expect(getFoo()).toBe('foo');
 		expect(numGettersCalled).toEqual({ foo: 1, bar: 0 });

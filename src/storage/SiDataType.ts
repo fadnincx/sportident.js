@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import { type ISiStorageData, ValueToStringError, ValueFromStringError } from './interfaces';
 import { SiFieldValue } from './SiFieldValue';
 

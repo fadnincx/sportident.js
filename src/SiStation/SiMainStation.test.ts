@@ -1,5 +1,4 @@
 import { describe, expect, test } from '@jest/globals';
-import _ from 'lodash';
 import { proto } from '../constants';
 import type * as siProtocol from '../siProtocol';
 import * as testUtils from '../testUtils';

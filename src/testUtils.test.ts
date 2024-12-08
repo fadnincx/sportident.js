@@ -1,5 +1,4 @@
 import { describe, expect, test } from '@jest/globals';
-import _ from 'lodash';
 import * as testUtils from './testUtils';
 
 testUtils.useFakeTimers();
@@ -158,24 +157,24 @@ describe('testUtils', () => {
 		});
 	});
 	test('getRandomInt with 0 options', () => {
-		_.range(10).forEach(() => {
+		Array.from({length: 10}, (_, i) => i).forEach(() => {
 			expect(testUtils.getRandomInt(0)).toBe(0);
 		});
 	});
 	test('getRandomInt with 1 options', () => {
-		_.range(10).forEach(() => {
+		Array.from({length: 10}, (_, i) => i).forEach(() => {
 			expect(testUtils.getRandomInt(1)).toBe(0);
 		});
 	});
 	test('getRandomInt with 2 options', () => {
-		_.range(10).forEach(() => {
+		Array.from({length: 10}, (_, i) => i).forEach(() => {
 			const randomInt = testUtils.getRandomInt(2);
 			expect(randomInt).not.toBeLessThan(0);
 			expect(randomInt).not.toBeGreaterThan(1);
 		});
 	});
 	test('getRandomByte', () => {
-		_.range(10).forEach(() => {
+		Array.from({length: 10}, (_, i) => i).forEach(() => {
 			const randomByte = testUtils.getRandomByte();
 			expect(randomByte).not.toBeLessThan(0x00);
 			expect(randomByte).not.toBeGreaterThan(0xff);
@@ -183,7 +182,7 @@ describe('testUtils', () => {
 		});
 	});
 	test('getRandomByteExcept one', () => {
-		_.range(10).forEach(() => {
+		Array.from({length: 10}, (_, i) => i).forEach(() => {
 			const randomByte = testUtils.getRandomByteExcept([0x42]);
 			expect(randomByte).not.toBe(0x42);
 			expect(randomByte).not.toBeLessThan(0x00);
@@ -192,13 +191,13 @@ describe('testUtils', () => {
 		});
 	});
 	test('getRandomByteExcept all but one', () => {
-		_.range(10).forEach(() => {
-			const randomByte = testUtils.getRandomByteExcept(_.range(255));
+		Array.from({length: 10}, (_, i) => i).forEach(() => {
+			const randomByte = testUtils.getRandomByteExcept(Array.from({length: 255}, (_, i) => i));
 			expect(randomByte).toBe(0xff);
 		});
 	});
 	test('getRandomMessage', () => {
-		_.range(10).forEach(() => {
+		Array.from({length: 10}, (_, i) => i).forEach(() => {
 			const randomMessage = testUtils.getRandomMessage({});
 			expect(randomMessage.command).not.toBeLessThan(0x00);
 			expect(randomMessage.command).not.toBeGreaterThan(0xff);
@@ -206,7 +205,7 @@ describe('testUtils', () => {
 		});
 	});
 	test('getRandomMessage with numParameters', () => {
-		_.range(10).forEach(() => {
+		Array.from({length: 10}, (_, i) => i).forEach(() => {
 			const numParameters = Math.floor(Math.random() * 3 + 1);
 			const randomMessage = testUtils.getRandomMessage({ numParameters: numParameters });
 			expect(randomMessage.command).not.toBeLessThan(0x00);
@@ -217,7 +216,7 @@ describe('testUtils', () => {
 		});
 	});
 	test('getRandomMessage with command', () => {
-		_.range(10).forEach(() => {
+		Array.from({length: 10}, (_, i) => i).forEach(() => {
 			const command = testUtils.getRandomByte();
 			const randomMessage = testUtils.getRandomMessage({ command: command });
 			expect(randomMessage.command).toBe(command);
@@ -225,9 +224,9 @@ describe('testUtils', () => {
 		});
 	});
 	test('getRandomMessage with parameters', () => {
-		_.range(10).forEach(() => {
+		Array.from({length: 10}, (_, i) => i).forEach(() => {
 			const numParameters = Math.floor(Math.random() * 3 + 1);
-			const parameters = _.range(numParameters).map(() => testUtils.getRandomByte());
+			const parameters = Array.from({length: numParameters}, (_, i) => i).map(() => testUtils.getRandomByte());
 			const randomMessage = testUtils.getRandomMessage({ parameters: parameters });
 			expect(randomMessage.command).not.toBeLessThan(0x00);
 			expect(randomMessage.command).not.toBeGreaterThan(0xff);

@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import * as storage from '../../storage';
 import * as siProtocol from '../../siProtocol';
 import { cropPunches, getCroppedString, ModernSiCard, ModernSiCardSeries } from './ModernSiCard';
@@ -40,7 +39,7 @@ export const siCard9StorageLocations: storage.ISiStorageLocations<ISiCard9Storag
 		// (cardNumber) => siProtocol.cardNumber2arr(cardNumber),
 		// (cardNumber) => `${cardNumber}`,
 		// (cardNumberString) => parseInt(cardNumberString, 10),
-		// (cardNumber) => cardNumber !== undefined && _.isInteger(cardNumber) && cardNumber >= 0,
+		// (cardNumber) => cardNumber !== undefined && Number.isInteger(cardNumber) && cardNumber >= 0,
 	),
 	startTime: new siProtocol.SiTime([[0x0f], [0x0e], [0x0c]]),
 	finishTime: new siProtocol.SiTime([[0x13], [0x12], [0x10]]),

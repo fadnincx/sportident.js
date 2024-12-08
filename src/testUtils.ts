@@ -1,6 +1,5 @@
 /* globals jest */
 
-import _ from 'lodash';
 import type * as siProtocol from './siProtocol';
 import { jest } from '@jest/globals';
 
@@ -56,7 +55,7 @@ export const getRandomMessage = (options: GetRandomMessageOptions): siProtocol.S
 	if (options.parameters !== undefined) {
 		parameters = options.parameters;
 	} else if (options.numParameters !== undefined) {
-		parameters = _.range(options.numParameters).map(() => getRandomByte());
+		parameters = Array.from({length: options.numParameters}, (_, i) => i).map(() => getRandomByte());
 	}
 	return { command: command, parameters: parameters };
 };

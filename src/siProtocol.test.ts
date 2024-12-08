@@ -1,5 +1,4 @@
 import { describe, expect, test } from '@jest/globals';
-import _ from 'lodash';
 import { List } from 'immutable';
 import { proto } from './constants';
 import * as utils from './utils';
@@ -32,7 +31,7 @@ const date2json = (date: Date | undefined): string | undefined => {
 export const getValidButIncompleteMessageBytes = (): number[][] => {
 	const cutOffCommands: number[][] = [];
 	const appendCutOffCommands = (command: number[]) => {
-		_.range(command.length).forEach((cutOffLength) => {
+		Array.from({length: command.length}, (_, i) => i).forEach((cutOffLength) => {
 			cutOffCommands.push(command.slice(0, cutOffLength));
 		});
 	};

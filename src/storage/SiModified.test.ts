@@ -1,5 +1,4 @@
 import { describe, expect, test } from '@jest/globals';
-import _ from 'lodash';
 import { List } from 'immutable';
 import { type ISiStorageData, ValueToStringError, ValueFromStringError } from './interfaces';
 import { ModifyUndefinedException, SiDataType } from './SiDataType';
@@ -52,7 +51,7 @@ describe('SiModified', () => {
 			const num = parseInt(hexString, 16);
 			return Number.isNaN(num) ? new ValueFromStringError('NaN') : num;
 		},
-		(charCode: number) => _.isInteger(charCode) && charCode >= 0
+		(charCode: number) => Number.isInteger(charCode) && charCode >= 0
 	);
 	const fieldValueOf = (modifiedValue: number) => new SiFieldValue(mySiModified, modifiedValue);
 	test('typeSpecificIsValueValid', () => {

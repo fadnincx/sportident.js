@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import * as utils from '../utils';
 import type { ISiDataType, ISiStorageData } from './interfaces';
 import { ValueFromStringError } from './interfaces';

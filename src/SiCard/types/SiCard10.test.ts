@@ -1,5 +1,4 @@
 import { describe, expect, test } from '@jest/globals';
-import _ from 'lodash';
 import { proto } from '../../constants';
 import type * as siProtocol from '../../siProtocol';
 import * as testUtils from '../../testUtils';
@@ -69,7 +68,7 @@ describe('SiCard10', () => {
 				expect(command).toBe(proto.cmd.GET_SI8);
 				expect(numResponses).toBe(1);
 				const pageNumberToGet = parameters[0];
-				const getPage = (pageNumber: number) => [...[0x00, 0x00, pageNumber], ..._.range(128).map(() => 0)];
+				const getPage = (pageNumber: number) => [...[0x00, 0x00, pageNumber], ...Array.from({length: 128}, (_, i) => i).map(() => 0)];
 				return Promise.resolve([getPage(pageNumberToGet)]);
 			}
 		};

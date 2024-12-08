@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import { type ISiDataType, type ISiStorageData, ValueFromStringError } from './interfaces';
 import { SiDataType } from './SiDataType';
 
@@ -30,7 +29,7 @@ export class SiArray<T> extends SiDataType<SiArrayValue<T>> implements ISiDataTy
 	}
 
 	typeSpecificExtractFromData(data: ISiStorageData): SiArrayValue<T> | undefined {
-		const arrayValue = _.range(this.length).map((index) => {
+		const arrayValue = Array.from({length: this.length}, (_, i) => i).map((index) => {
 			const definition = this.getDefinitionAtIndex(index);
 			const itemFieldValue = definition.extractFromData(data);
 			if (itemFieldValue === undefined) {
@@ -44,7 +43,7 @@ export class SiArray<T> extends SiDataType<SiArrayValue<T>> implements ISiDataTy
 	typeSpecificUpdateData(data: ISiStorageData, newValue: SiArrayValue<T>): ISiStorageData {
 		const updateLength = Math.min(newValue.length, this.length);
 		let tempData = data;
-		_.range(updateLength).forEach((index) => {
+		Array.from({length: updateLength}, (_, i) => i).forEach((index) => {
 			const definition = this.getDefinitionAtIndex(index);
 			const newItemValue = newValue[index];
 			if (newItemValue !== undefined) {

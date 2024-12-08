@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import { proto } from '../constants';
 import * as utils from '../utils';
 import type * as siProtocol from '../siProtocol';

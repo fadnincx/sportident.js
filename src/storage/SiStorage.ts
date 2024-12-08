@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import { List } from 'immutable';
 import type { ISiFieldValue, ISiStorage, ISiStorageData, ISiStorageDefinition, ISiStorageLocations } from './interfaces';
 
@@ -7,7 +6,7 @@ export class SiStorage<T> implements ISiStorage<T> {
 
 	// eslint-disable-next-line no-useless-constructor
 	constructor(public readonly size: number, public readonly locations: ISiStorageLocations<T>, initArg?: List<number | undefined> | Array<number | undefined>) {
-		const initArrayOrList = (initArg === undefined ? _.range(size).map(() => undefined) : initArg) as List<number | undefined> | Array<number | undefined>;
+		const initArrayOrList = (initArg === undefined ? Array.from({length: size}, (_, i) => i).map(() => undefined) : initArg) as List<number | undefined> | Array<number | undefined>;
 		const initList = (initArrayOrList instanceof List ? initArrayOrList : List(initArrayOrList)) as List<number | undefined>;
 		if (initList.size !== size) {
 			throw new Error(`SiStorage constructor list "${initArg}" => "${initList}" ` + `must have size ${size} (but is ${initList.size})`);

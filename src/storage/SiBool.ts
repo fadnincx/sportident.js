@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import { type ISiDataType, type ISiStorageData, ValueFromStringError } from './interfaces';
 import { ModifyUndefinedException, SiDataType } from './SiDataType';
 

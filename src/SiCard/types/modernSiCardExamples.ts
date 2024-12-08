@@ -1,11 +1,10 @@
-import _ from 'lodash';
 import * as utils from '../../utils';
 import type { SiCardSample } from '../ISiCardExamples';
 import { ModernSiCardSeries } from './ModernSiCard';
 
 const cache = {};
 
-const getUnknownPage = utils.cached(cache, () => _.range(128).map(() => undefined));
+const getUnknownPage = utils.cached(cache, () => Array.from({length: 128}, (_, i) => i).map(() => undefined));
 const getEmptyPage = utils.cached(cache, () =>
 	utils.unPrettyHex(`
         20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20
@@ -124,7 +123,7 @@ export const getCardWith64Punches = utils.cached(cache, () => ({
 		finishTime: null,
 		checkTime: {time:8735+43200, weekcounter: 3, weekday: 3},
 		punchCount: 64,
-		punches: _.range(64).map(() => ({ code: 32, time: {time:8224, weekcounter: 2, weekday: 0} })),
+		punches: Array.from({length: 64}, (_, i) => i).map(() => ({ code: 32, time: {time:8224, weekcounter: 2, weekday: 0} })),
 		cardHolder: {
 			firstName: 'a',
 			lastName: 'b',
@@ -170,7 +169,7 @@ export const getCardWith96Punches = utils.cached(cache, () => ({
 		finishTime: null,
 		checkTime: {time:8735+43200, weekcounter: 3, weekday: 3},
 		punchCount: 96,
-		punches: _.range(96).map(() => ({ code: 32, time: {time:8224, weekcounter: 2, weekday: 0} })),
+		punches: Array.from({length: 96}, (_, i) => i).map(() => ({ code: 32, time: {time:8224, weekcounter: 2, weekday: 0} })),
 		cardHolder: {
 			firstName: 'a',
 			lastName: 'b',
@@ -216,7 +215,7 @@ export const getFullCard = utils.cached(cache, () => ({
 		finishTime: {time:8481+43200, weekcounter: 0, weekday: 3},
 		checkTime: {time:8735+43200, weekcounter: 3, weekday: 3},
 		punchCount: 128,
-		punches: _.range(128).map(() => ({ code: 32, time: {time:8224, weekcounter: 2, weekday: 0} })),
+		punches: Array.from({length: 128}, (_, i) => i).map(() => ({ code: 32, time: {time:8224, weekcounter: 2, weekday: 0} })),
 		cardHolder: {
 			firstName: 'aaaaaaaaaaaaaaa',
 			lastName: 'bbbbbbbbbbbbbbb',
@@ -271,7 +270,7 @@ export const getPartialCardHolderCard = utils.cached(cache, () => ({
 		finishTime: null,
 		checkTime: {time:8735+43200, weekcounter: 3, weekday: 3},
 		punchCount: 128,
-		punches: _.range(128).map(() => ({ code: 32, time: {time:8224, weekcounter: 2, weekday: 0} })),
+		punches: Array.from({length: 128}, (_, i) => i).map(() => ({ code: 32, time: {time:8224, weekcounter: 2, weekday: 0} })),
 		cardHolder: {
 			firstName: 'aaaaaaaaaaaaaaa',
 			lastName: 'bbbbbbbbbbbbbbb',

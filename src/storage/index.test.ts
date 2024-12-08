@@ -1,5 +1,4 @@
 import { describe, expect, test } from '@jest/globals';
-import _ from 'lodash';
 import * as utils from '../utils';
 import * as storage from './index';
 

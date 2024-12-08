@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import { proto } from './constants';
 import * as utils from './utils';
 import * as storage from './storage';
@@ -198,7 +197,7 @@ export const parse = (inputData: number[]): SiMessageParseResult => {
 	}
 	const expectedCRC = CRC16(inputData.slice(1, 3 + numParameters));
 	const actualCRC = inputData.slice(3 + numParameters, 5 + numParameters);
-	if (!_.isEqual(actualCRC, expectedCRC)) {
+	if (actualCRC.length != expectedCRC.length || !actualCRC.every((value, index) => value === expectedCRC[index])) {
 		console.warn(`Invalid CRC: ${utils.prettyHex(actualCRC)} (expected ${utils.prettyHex(expectedCRC)})`);
 		return failAndProceed(6 + numParameters);
 	}
@@ -321,13 +320,13 @@ export class SiTime extends storage.SiDataType<SiTimestamp> implements storage.I
 			this.intFieldWeekCounter = undefined
 		}else if (byteStorage.length == 3){
 			this.intFieldTime12 = new storage.SiInt([byteStorage[0],byteStorage[1]])
-			this.intFieldAmPm = new storage.SiInt(_.map(byteStorage[2], (b:number):SiIntegerPartDefinition=>{
+			this.intFieldAmPm = new storage.SiInt(byteStorage[2].map((b:number):SiIntegerPartDefinition=>{
 				return [b,0,1] // offset, startbit, endbit
 			}))
-			this.intFieldDayOfWeek = new storage.SiInt(_.map(byteStorage[2], (b:number):SiIntegerPartDefinition=>{
+			this.intFieldDayOfWeek = new storage.SiInt(byteStorage[2].map((b:number):SiIntegerPartDefinition=>{
 				return [b,1,4] // offset, startbit, endbit
 			}))
-			this.intFieldWeekCounter = new storage.SiInt(_.map(byteStorage[2], (b:number):SiIntegerPartDefinition=>{
+			this.intFieldWeekCounter = new storage.SiInt(byteStorage[2].map((b:number):SiIntegerPartDefinition=>{
 				return [b,4,6] // offset, startbit, endbit
 			}))
 		}else if (byteStorage.length == 2){

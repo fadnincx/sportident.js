@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import * as utils from '../../utils';
 import type { SiCardSample } from '../ISiCardExamples';
 
@@ -84,7 +83,7 @@ export const getFullCard = utils.cached(cache, () => ({
 		finishTime: {time:8481+43200, weekcounter: 0, weekday: 3},
 		checkTime: {time:8735+43200, weekcounter: 3, weekday: 3},
 		punchCount: 50,
-		punches: _.range(50).map(() => ({ code: 32, time: {time: 8224 , weekcounter: 2, weekday: 0}})),
+		punches: Array.from({length: 50}, (_, i) => i).map(() => ({ code: 32, time: {time: 8224 , weekcounter: 2, weekday: 0}})),
 		cardHolder: {
 			firstName: 'aaaaaaaaaaaaaaa',
 			lastName: 'bbbbbbb',

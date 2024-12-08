@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import { proto } from '../../../constants';
 import * as siProtocol from '../../../siProtocol';
 import { BaseFakeSiCard } from '../BaseFakeSiCard';
