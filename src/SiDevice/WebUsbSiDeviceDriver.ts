@@ -4,7 +4,6 @@ import type { ISiDevice, ISiDeviceDriverData } from '../SiDevice/ISiDevice';
 import { SiDeviceAddEvent, SiDeviceRemoveEvent } from '../SiDevice/ISiDeviceDriver';
 import type { ISiDeviceDriver, ISiDeviceDriverWithAutodetection, ISiDeviceDriverWithDetection, SiDeviceDriverWithAutodetectionEvents } from '../SiDevice/ISiDeviceDriver';
 import { SiDevice } from '../SiDevice/SiDevice';
-import type * as nav from './INavigatorWebUsb';
 
 const siConfiguration = 1;
 const siAlternate = 0;
@@ -13,7 +12,7 @@ const siUsbClassCode = 255;
 const siDeviceFilters = [{ vendorId: 0x10c4, productId: 0x800a }];
 const matchesSiDeviceFilters = (vendorId: number, productId: number) => siDeviceFilters.some((filter) => vendorId === filter.vendorId && productId === filter.productId);
 
-const getIdent = (device: nav.WebUsbDevice) => `${device.serialNumber}`;
+const getIdent = (device: USBDevice) => `${device.serialNumber}`;
 
 function findEndpoint(iface: USBInterface, direction: USBDirection): USBEndpoint {
 	const alternate = iface.alternates[0];
@@ -24,7 +23,7 @@ function findEndpoint(iface: USBInterface, direction: USBDirection): USBEndpoint
 	}
 	throw new TypeError(`Interface ${iface.interfaceNumber} does not have an ` + `${direction} endpoint.`);
 }
-function findInterface(device: nav.WebUsbDevice): USBInterface {
+function findInterface(device: USBDevice): USBInterface {
 	const configuration = device.configurations[0];
 	for (const iface of configuration.interfaces) {
 		const alternate = iface.alternates[0];
@@ -36,12 +35,12 @@ function findInterface(device: nav.WebUsbDevice): USBInterface {
 }
 export interface WebUsbSiDeviceDriverData extends ISiDeviceDriverData<WebUsbSiDeviceDriver> {
 	driver: WebUsbSiDeviceDriver;
-	device: nav.WebUsbDevice;
+	device: USBDevice;
 }
 
 interface WebUsbAutodetectionCallbacks {
-	onConnect: utils.EventCallback<nav.WebUsbConnectEvent>;
-	onDisconnect: utils.EventCallback<nav.WebUsbDisconnectEvent>;
+	onConnect: utils.EventCallback<USBConnectionEvent>;
+	onDisconnect: utils.EventCallback<USBConnectionEvent>;
 }
 
 export type IWebUsbSiDevice = ISiDevice<WebUsbSiDeviceDriverData>;
@@ -58,7 +57,7 @@ export class WebUsbSiDeviceDriver
 
 	private autodetectionCallbacks?: WebUsbAutodetectionCallbacks;
 
-	constructor(private navigatorUsb: nav.WebUsb) {}
+	constructor(private navigatorUsb: USB) {}
 
 	detect(): Promise<WebUsbSiDevice> {
 		return this.navigatorUsb
@@ -68,7 +67,7 @@ export class WebUsbSiDeviceDriver
 			.catch((e) => {
 				return Promise.reject(new Error('Failed to get access to USB device! ' + e.toString()));
 			})
-			.then((navigatorWebUsbDevice: nav.WebUsbDevice) => this.autodetectSiDevice(navigatorWebUsbDevice))
+			.then((navigatorWebUsbDevice: USBDevice) => this.autodetectSiDevice(navigatorWebUsbDevice))
 			.catch((e) => {
 				return Promise.reject(new Error('Failed to initialize Si Device! ' + e.toString()));
 			});
@@ -78,7 +77,7 @@ export class WebUsbSiDeviceDriver
 		return Promise.resolve(Object.values(this.autodetectedSiDevices))
 	}
 
-	getSiDevice(navigatorWebUsbDevice: nav.WebUsbDevice): WebUsbSiDevice {
+	getSiDevice(navigatorWebUsbDevice: USBDevice): WebUsbSiDevice {
 		const ident = getIdent(navigatorWebUsbDevice);
 		if (this.siDeviceByIdent[ident] !== undefined) {
 			return this.siDeviceByIdent[ident];
@@ -108,10 +107,10 @@ export class WebUsbSiDeviceDriver
 	}
 
 	getAutodetectedDevices(): Promise<WebUsbSiDevice[]> {
-		return this.navigatorUsb.getDevices().then((navigatorWebUsbDevices: nav.WebUsbDevice[]) => this.autodetectSiDevices(navigatorWebUsbDevices));
+		return this.navigatorUsb.getDevices().then((navigatorWebUsbDevices: USBDevice[]) => this.autodetectSiDevices(navigatorWebUsbDevices));
 	}
 
-	autodetectSiDevices(navigatorWebUsbDevices: nav.WebUsbDevice[]): Promise<WebUsbSiDevice[]> {
+	autodetectSiDevices(navigatorWebUsbDevices: USBDevice[]): Promise<WebUsbSiDevice[]> {
 		// TODO: Make this easier when Promise.allSettled polyfill is available
 		return new Promise((resolve) => {
 			let numSettled = 0;
@@ -122,7 +121,7 @@ export class WebUsbSiDeviceDriver
 					resolve(devices);
 				}
 			};
-			navigatorWebUsbDevices.forEach((navigatorWebUsbDevice: nav.WebUsbDevice) =>
+			navigatorWebUsbDevices.forEach((navigatorWebUsbDevice: USBDevice) =>
 				this.autodetectSiDevice(navigatorWebUsbDevice)
 					.then((siDevice: WebUsbSiDevice) => {
 						devices.push(siDevice);
@@ -133,10 +132,15 @@ export class WebUsbSiDeviceDriver
 		});
 	}
 
-	autodetectSiDevice(navigatorWebUsbDevice: nav.WebUsbDevice): Promise<WebUsbSiDevice> {
+	autodetectSiDevice(navigatorWebUsbDevice: USBDevice): Promise<WebUsbSiDevice> {
 		if (!matchesSiDeviceFilters(navigatorWebUsbDevice.vendorId, navigatorWebUsbDevice.productId)) {
 			return Promise.reject(new Error('Not a SI device'));
 		}
+		this.navigatorUsb.addEventListener("disconnect",(event:USBConnectionEvent)=>{
+			if(event.device == navigatorWebUsbDevice){
+				siDevice.close()
+			}
+		})
 		const ident = getIdent(navigatorWebUsbDevice);
 		if (this.autodetectedSiDevices[ident] !== undefined) {
 			return Promise.reject(new Error('Duplicate SI device'));
@@ -150,7 +154,7 @@ export class WebUsbSiDeviceDriver
 		if (this.autodetectionCallbacks !== undefined) {
 			return;
 		}
-		const onConnectCallback = (event: nav.WebUsbConnectEvent) => {
+		const onConnectCallback = (event: USBConnectionEvent) => {
 			const navigatorWebUsbDevice = event.device;
 			this.autodetectSiDevice(navigatorWebUsbDevice)
 			.then((openedDevice: WebUsbSiDevice) => {
@@ -158,7 +162,7 @@ export class WebUsbSiDeviceDriver
 			})
 		};
 		this.navigatorUsb.addEventListener('connect', onConnectCallback);
-		const onDisconnectCallback = (event: nav.WebUsbDisconnectEvent) => {
+		const onDisconnectCallback = (event: USBConnectionEvent) => {
 			const navigatorWebUsbDevice = event.device;
 			const ident = getIdent(navigatorWebUsbDevice);
 			const siDevice = this.siDeviceByIdent[ident];
@@ -268,7 +272,7 @@ export class WebUsbSiDeviceDriver
 			.then(() => {
 				try {
 					console.debug('Setting Baudrate...');
-					return navigatorDevice.controlTransferOut(
+					navigatorDevice.controlTransferOut(
 						{
 							requestType: 'vendor',
 							recipient: 'interface',
@@ -278,6 +282,7 @@ export class WebUsbSiDeviceDriver
 						},
 						new Uint8Array([0x00, 0x96, 0x00, 0x00]).buffer
 					);
+					return;
 				} catch (e) {
 					console.error('Failed setting baudrate on web usb device:', e);
 					return Promise.reject(new Error("Failed setting baudrate on web usb device "+e))
@@ -350,4 +355,4 @@ export class WebUsbSiDeviceDriver
 export interface WebUsbSiDeviceDriver extends utils.EventTarget<SiDeviceDriverWithAutodetectionEvents<WebUsbSiDeviceDriverData>> {}
 utils.applyMixins(WebUsbSiDeviceDriver, [utils.EventTarget]);
 
-export const getWebUsbSiDeviceDriver = (navigatorWebUsb: USB): WebUsbSiDeviceDriver => new WebUsbSiDeviceDriver(<nav.WebUsb>(<unknown>navigatorWebUsb));
+export const getWebUsbSiDeviceDriver = (navigatorWebUsb: USB): WebUsbSiDeviceDriver => new WebUsbSiDeviceDriver(<USB>(<unknown>navigatorWebUsb));
