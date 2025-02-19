@@ -198,99 +198,78 @@ export class WebUsbSiDeviceDriver
 		});
 	}
 
-	open(device: IWebUsbSiDevice): Promise<void> {
+	async open(device: IWebUsbSiDevice): Promise<void> {
 		console.debug('Opening...');
 		const navigatorDevice = device.data.device;
-		return navigatorDevice
-			.open()
-			.then(() => {
-				try {
-					console.debug('Resetting...');
-					return navigatorDevice.reset();
-				} catch (e) {
-					console.error('Failed resetting web usb device:', e);
-					return Promise.reject(new Error("Failed resetting web usb device"))
-				}
-			})
-			.catch((_e) => {
-				return Promise.reject(new Error('Failed to reset usb device'));
-			})
-			.then(() => {
-				try {
-					console.debug('Selecting Configuration...');
-					return navigatorDevice.selectConfiguration(siConfiguration);
-				} catch (e) {
-					console.error('Failed selecting configuration of web usb device:', e);
-					return Promise.reject(new Error("Failed selecting configuration of web usb device "+e))
-				}
-			})
-			.catch((_e) => {
-				return Promise.reject(new Error('Failed to select configuration of usb device'));
-			})
-			.then(() => {
-				try {
-					console.debug('Claiming Interface...');
-					return navigatorDevice.claimInterface(findInterface(navigatorDevice).interfaceNumber);
-				} catch (e) {
-					console.error('Failed claiming web usb device interface:', e);
-					return Promise.reject(new Error("Failed claiming web usb device interface "+e))
-				}
-			})
-			.catch((_e) => {
-				return Promise.reject(new Error('Failed to claim usb device interface'));
-			})
-			.then(() => {
-				try {
-					console.debug('Selection Alternate Interface...');
-					return navigatorDevice.selectAlternateInterface(findInterface(navigatorDevice).interfaceNumber, siAlternate);
-				} catch (e) {
-					console.error('Failed selecting alternate interface web usb device:', e);
-					return Promise.reject(new Error("Failed selecting alternate interface web usb device "+e))
-				}
-			})
-			.catch((_e) => {
-				return Promise.reject(new Error('Failed to select alternate interface of usb device'));
-			})
-			.then(() => {
-				try {
-					console.debug('Enabling Serial...');
-					return navigatorDevice.controlTransferOut({
-						requestType: 'vendor',
-						recipient: 'interface',
-						request: 0x00,
-						value: 0x01,
-						index: findInterface(navigatorDevice).interfaceNumber
-					});
-				} catch (e) {
-					console.error('Failed enabling serial on web usb device:', e);
-					return Promise.reject(new Error("Failed enabling serial on web usb device "+e))
-				}
-			})
-			.catch((_e) => {
-				return Promise.reject(new Error('Failed to enable serial on usb device'));
-			})
-			.then(() => {
-				try {
-					console.debug('Setting Baudrate...');
-					navigatorDevice.controlTransferOut(
-						{
-							requestType: 'vendor',
-							recipient: 'interface',
-							request: 0x1e,
-							value: 0x00,
-							index: findInterface(navigatorDevice).interfaceNumber
-						},
-						new Uint8Array([0x00, 0x96, 0x00, 0x00]).buffer
-					);
-					return;
-				} catch (e) {
-					console.error('Failed setting baudrate on web usb device:', e);
-					return Promise.reject(new Error("Failed setting baudrate on web usb device "+e))
-				}
-			})
-			.catch((_e) => {
-				return Promise.reject(new Error('Failed to set baudrate on usb device'));
+
+		try{
+			await navigatorDevice.open()
+		}catch(e){
+			console.error("Failed to open web usb device:", e)
+			return Promise.reject(e)
+		}
+		try {
+			console.debug('Resetting...');
+			await navigatorDevice.reset();
+		} catch (e) {
+			console.error('Failed resetting web usb device:', e);
+			return Promise.reject(new Error("Failed resetting web usb device"))
+		}
+
+		try {
+			console.debug('Selecting Configuration...');
+			await navigatorDevice.selectConfiguration(siConfiguration);
+		} catch (e) {
+			console.error('Failed selecting configuration of web usb device:', e);
+			return Promise.reject(new Error("Failed selecting configuration of web usb device "+e))
+		}
+		try {
+			console.debug('Claiming Interface...');
+			await navigatorDevice.claimInterface(findInterface(navigatorDevice).interfaceNumber);
+		} catch (e) {
+			console.error('Failed claiming web usb device interface:', e);
+			return Promise.reject(new Error("Failed claiming web usb device interface "+e))
+		}
+		try {
+			console.debug('Selection Alternate Interface...');
+			await navigatorDevice.selectAlternateInterface(findInterface(navigatorDevice).interfaceNumber, siAlternate);
+		} catch (e) {
+			console.error('Failed selecting alternate interface web usb device:', e);
+			return Promise.reject(new Error("Failed selecting alternate interface web usb device "+e))
+		}
+		try {
+			console.debug('Enabling Serial...');
+			await navigatorDevice.controlTransferOut({
+				requestType: 'vendor',
+				recipient: 'interface',
+				request: 0x00,
+				value: 0x01,
+				index: findInterface(navigatorDevice).interfaceNumber
 			});
+		} catch (e) {
+			console.error('Failed enabling serial on web usb device:', e);
+			return Promise.reject(new Error("Failed enabling serial on web usb device "+e))
+		}
+		try {
+			console.debug('Setting Baudrate...');
+			navigatorDevice.controlTransferOut(
+				{
+					requestType: 'vendor',
+					recipient: 'interface',
+					request: 0x1e,
+					value: 0x00,
+					index: findInterface(navigatorDevice).interfaceNumber
+				},
+				new Uint8Array([0x00, 0x96, 0x00, 0x00]).buffer
+			).then(r =>{
+				console.log(r)
+			});
+			return;
+		} catch (e) {
+			console.error('Failed setting baudrate on web usb device:', e);
+			return Promise.reject(new Error("Failed setting baudrate on web usb device "+e))
+		}
+
 	}
 
 	async close(device: IWebUsbSiDevice): Promise<void> {
