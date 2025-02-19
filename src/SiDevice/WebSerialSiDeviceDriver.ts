@@ -1,7 +1,7 @@
 import * as utils from '../utils';
 import { DeviceClosedError, type ISiDevice, type ISiDeviceDriverData } from '../SiDevice/ISiDevice';
-import type { ISiDeviceDriver, SiDeviceDriverWithAutodetectionEvents } from '../SiDevice/ISiDeviceDriver';
-import { SiDeviceRemoveEvent } from '../SiDevice/ISiDeviceDriver';
+import type { ISiDeviceDriver, ISiDeviceDriverWithAutodetection, ISiDeviceDriverWithDetection, SiDeviceDriverWithAutodetectionEvents } from '../SiDevice/ISiDeviceDriver';
+import { SiDeviceAddEvent, SiDeviceRemoveEvent } from '../SiDevice/ISiDeviceDriver';
 import { SiDevice } from '../SiDevice/SiDevice';
 //import type * as nav from './INavigatorWebSerial';
 
@@ -18,7 +18,7 @@ export interface WebSerialSiDeviceDriverData extends ISiDeviceDriverData<WebSeri
 export type IWebSerialSiDevice = ISiDevice<WebSerialSiDeviceDriverData>;
 export type WebSerialSiDevice = SiDevice<WebSerialSiDeviceDriverData>;
 
-export class WebSerialSiDeviceDriver implements ISiDeviceDriver<WebSerialSiDeviceDriverData> {
+export class WebSerialSiDeviceDriver implements ISiDeviceDriver<WebSerialSiDeviceDriverData>, ISiDeviceDriverWithDetection<WebSerialSiDeviceDriverData, []>, ISiDeviceDriverWithAutodetection<WebSerialSiDeviceDriverData> {
 	public name = 'WebSerial';
 
 	private siDeviceByIdent: { [ident: string]: WebSerialSiDevice } = {};
@@ -28,8 +28,34 @@ export class WebSerialSiDeviceDriver implements ISiDeviceDriver<WebSerialSiDevic
 	private reader: ReadableStreamDefaultReader<any> | undefined;
 
 	constructor(private navigatorSerial: Serial) {}
+	startAutoDetection(): Promise<ISiDevice<WebSerialSiDeviceDriverData>[]>{
+		console.debug("Start serial autodetection")
+		this.navigatorSerial.addEventListener("connect",(event:Event)=>{
+			console.log(event.target,"connected")
+			const i = getIdent((event.target as SerialPort))
+			if(this.autodetectedSiDevices[i] == undefined){
+				const siDevice = this.getSiDevice((event.target as SerialPort));
+				this.autodetectedSiDevices[i] = siDevice;
+				siDevice.open();
+			}
+			this.dispatchEvent('add', new SiDeviceAddEvent(this.autodetectedSiDevices[i]))
+		})
+		this.navigatorSerial.addEventListener("disconnect",(event:Event)=>{
+			console.log(event.target,"disconnected")
+			const i = getIdent((event.target as SerialPort))
+			if(this.autodetectedSiDevices[i] != undefined){
+				this.dispatchEvent('remove', new SiDeviceRemoveEvent(this.autodetectedSiDevices[i]))
+				this.forgetSiDevice(this.autodetectedSiDevices[i])
+			}
+		})
 
-	detect(): Promise<WebSerialSiDevice> {
+		return this.getExistingDevices()
+	}
+	stopAutoDetection(): Promise<unknown> {
+		return Promise.resolve()
+	}
+
+	async detect(): Promise<WebSerialSiDevice> {
 		return this.navigatorSerial
 			.requestPort({
 				filters: siDeviceFilters
@@ -62,8 +88,33 @@ export class WebSerialSiDeviceDriver implements ISiDeviceDriver<WebSerialSiDevic
 			});
 	}
 
-	getExistingDevices(): Promise<WebSerialSiDevice[]> {
-		return Promise.resolve(Object.values(this.autodetectedSiDevices))
+	async getExistingDevices(): Promise<WebSerialSiDevice[]> {
+		return this.navigatorSerial.getPorts().then((ports)=>{
+			const r:WebSerialSiDevice[] = []
+			for(const port of ports){
+				const i = getIdent(port)
+				if(this.autodetectedSiDevices[i] !== undefined){
+					r.push(this.autodetectedSiDevices[i])
+				}else{
+					const siDevice = this.getSiDevice(port);
+					this.autodetectedSiDevices[i] = siDevice;
+					port.addEventListener("disconnect",()=>{
+						console.log("serial disconnect event, closing si device!")
+						siDevice.close()
+					})
+					this.navigatorSerial.addEventListener("disconnect",(event:Event)=>{
+						console.log(event.target,"disconnected")
+						if((event.target as SerialPort) == port){
+							console.log("matches device, close sidevice")
+							siDevice.close()
+						}
+					})
+					siDevice.open();
+					r.push(siDevice)
+				}
+			}
+			return r
+		})
 	}
 
 	getSiDevice(navigatorWebSerialDevice: SerialPort): WebSerialSiDevice {
