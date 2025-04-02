@@ -73,7 +73,7 @@ export const arr2cardNumber = (arr: (number | undefined)[]): number | undefined 
 	const fourthSet = arr.length === 4 && arr[3]! !== 0x00;
 	if (fourthSet || 4 < arr[2]!) {
 		cardnum |= arr[2]! << 16;
-	} else {
+	} else if (arr[2]! > 1){
 		cardnum += arr[2]! * 100000;
 	}
 	if (arr.length === 4) {
