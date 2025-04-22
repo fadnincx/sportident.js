@@ -3,6 +3,7 @@ import { DeviceClosedError, type ISiDevice, type ISiDeviceDriverData } from '../
 import type { ISiDeviceDriver, ISiDeviceDriverWithAutodetection, ISiDeviceDriverWithDetection, SiDeviceDriverWithAutodetectionEvents } from '../SiDevice/ISiDeviceDriver';
 import { SiDeviceAddEvent, SiDeviceRemoveEvent } from '../SiDevice/ISiDeviceDriver';
 import { SiDevice } from '../SiDevice/SiDevice';
+import { SiMainStation } from '../SiStation/SiMainStation';
 //import type * as nav from './INavigatorWebSerial';
 
 const siDeviceFilters = [{ usbVendorId: 0x10c4, usbProductId: 0x800a }];
@@ -35,10 +36,19 @@ export class WebSerialSiDeviceDriver implements ISiDeviceDriver<WebSerialSiDevic
 			const i = getIdent((event.target as SerialPort))
 			if(this.autodetectedSiDevices[i] == undefined){
 				const siDevice = this.getSiDevice((event.target as SerialPort));
-				this.autodetectedSiDevices[i] = siDevice;
 				siDevice.open();
+				SiMainStation.fromSiDevice(siDevice).readInfo().then(e=>{
+					console.log("got info from si device")
+					this.autodetectedSiDevices[i] = siDevice;
+					this.dispatchEvent('add', new SiDeviceAddEvent(this.autodetectedSiDevices[i]))
+				}).catch(e => {
+					console.log("failed to get info, probably not si device")
+					this.dispatchEvent('remove', new SiDeviceRemoveEvent(siDevice))
+					this.forgetSiDevice(siDevice)
+					siDevice.close()
+				})
 			}
-			this.dispatchEvent('add', new SiDeviceAddEvent(this.autodetectedSiDevices[i]))
+			
 		})
 		this.navigatorSerial.addEventListener("disconnect",(event:Event)=>{
 			console.log(event.target,"disconnected")
@@ -89,30 +99,39 @@ export class WebSerialSiDeviceDriver implements ISiDeviceDriver<WebSerialSiDevic
 	}
 
 	async getExistingDevices(): Promise<WebSerialSiDevice[]> {
-		return this.navigatorSerial.getPorts().then((ports)=>{
+		return this.navigatorSerial.getPorts().then(async (ports)=>{
 			const r:WebSerialSiDevice[] = []
+			console.log("Ports",ports)
 			for(const port of ports){
 				const i = getIdent(port)
 				if(this.autodetectedSiDevices[i] !== undefined){
 					r.push(this.autodetectedSiDevices[i])
 				}else{
 					const siDevice = this.getSiDevice(port);
-					this.autodetectedSiDevices[i] = siDevice;
-					port.addEventListener("disconnect",()=>{
-						console.log("serial disconnect event, closing si device!")
+					siDevice.open();
+					await SiMainStation.fromSiDevice(siDevice).readInfo().then(e=>{
+						console.log("got info from si device")
+						this.autodetectedSiDevices[i] = siDevice;
+						port.addEventListener("disconnect",()=>{
+							console.log("serial disconnect event, closing si device!")
+							siDevice.close()
+						})
+						this.navigatorSerial.addEventListener("disconnect",(event:Event)=>{
+							console.log(event.target,"disconnected")
+							if((event.target as SerialPort) == port){
+								console.log("matches device, close sidevice")
+								siDevice.close()
+							}
+						})
+						r.push(siDevice)
+					}).catch(e => {
+						console.log("failed to get info, probably not si device")
 						siDevice.close()
 					})
-					this.navigatorSerial.addEventListener("disconnect",(event:Event)=>{
-						console.log(event.target,"disconnected")
-						if((event.target as SerialPort) == port){
-							console.log("matches device, close sidevice")
-							siDevice.close()
-						}
-					})
-					siDevice.open();
-					r.push(siDevice)
+					
 				}
 			}
+			console.log(r)
 			return r
 		})
 	}
