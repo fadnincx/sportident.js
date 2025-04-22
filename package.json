@@ -1,6 +1,6 @@
 {
   "name": "sportident.js",
-  "version": "1.3.2",
+  "version": "1.3.3",
   "description": "JavaScript interface to SportIdent devices",
   "scripts": {
     "build": "tsc -b --verbose",
