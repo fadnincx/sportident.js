@@ -514,7 +514,7 @@ describe('SiTargetMultiplexer', () => {
 		muxer.latestTarget = SiTargetMultiplexerTarget.Direct;
 		const randomMessage = testUtils.getRandomMessage({});
 		const timeState = { setToUnknownFailed: false };
-		muxer.sendMessage(SiTargetMultiplexerTarget.Unknown, randomMessage, 1, 1).catch(() => {
+		await muxer.sendMessage(SiTargetMultiplexerTarget.Unknown, randomMessage, 1, 1).catch(() => {
 			expect(muxer._test.sendQueue.length).toBe(0);
 			timeState.setToUnknownFailed = true;
 		});
@@ -528,7 +528,7 @@ describe('SiTargetMultiplexer', () => {
 		muxer.latestTarget = SiTargetMultiplexerTarget.Direct;
 		const randomMessage = testUtils.getRandomMessage({});
 		const timeState = { setToSwitchingFailed: false };
-		muxer.sendMessage(SiTargetMultiplexerTarget.Switching, randomMessage, 1, 1).catch(() => {
+		await muxer.sendMessage(SiTargetMultiplexerTarget.Switching, randomMessage, 1, 1).catch(() => {
 			expect(muxer._test.sendQueue.length).toBe(0);
 			timeState.setToSwitchingFailed = true;
 		});
@@ -546,7 +546,7 @@ describe('SiTargetMultiplexer', () => {
 		muxer.latestTarget = SiTargetMultiplexerTarget.Direct;
 		const randomMessage = testUtils.getRandomMessage({});
 		const timeState = { setTargetFailed: false };
-		muxer.sendMessage(SiTargetMultiplexerTarget.Remote, randomMessage, 1, 1).catch(() => {
+		await muxer.sendMessage(SiTargetMultiplexerTarget.Remote, randomMessage, 1, 1).catch(() => {
 			timeState.setTargetFailed = true;
 		});
 		await testUtils.nTimesAsync(2, () => testUtils.advanceTimersByTime(0));

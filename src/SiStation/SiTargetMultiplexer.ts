@@ -145,11 +145,12 @@ export class SiTargetMultiplexer implements ISiTargetMultiplexer {
 	}
 
 	async sendMessage(target: SiTargetMultiplexerTarget, message: siProtocol.SiMessage, numResponses?: number, timeoutInMiliseconds?: number): Promise<number[][]> {
-		return this.setTarget(target).then(() => this.sendMessageToLatestTarget(message, numResponses, timeoutInMiliseconds)).catch(e=>{console.warn(e); return Promise.reject(e)})
+		return this.setTarget(target).then(
+			() => this.sendMessageToLatestTarget(message, numResponses, timeoutInMiliseconds)
+		)
 	}
 
 	async setTarget(target: SiTargetMultiplexerTarget): Promise<void> {
-		console.warn("set Target to ",target, "last is ",this.latestTarget)
 		if (target === this.latestTarget) {
 			return Promise.resolve();
 		}
