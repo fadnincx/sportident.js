@@ -122,12 +122,57 @@ describe('siProtocol', () => {
 		expect(forthAndBackAsJson('1999-12-31T23:59:59.750Z')).toBe('1999-12-31T23:59:59.750Z');
 	});
 	test('arr2cardNumber works', () => {
+
+		// SI 5
 		expect(siProtocol.arr2cardNumber([0x00, 0x00, 0x00])).toBe(0x000000);
 		expect(siProtocol.arr2cardNumber([0x12, 0x34, 0x00])).toBe(0x003412);
-		expect(siProtocol.arr2cardNumber([0x12, 0x34, 0x01])).toBe(0x003412 + 1 * 100000);
+		expect(siProtocol.arr2cardNumber([0x12, 0x34, 0x01])).toBe(0x003412); // Special case SI5
 		expect(siProtocol.arr2cardNumber([0x12, 0x34, 0x02])).toBe(0x003412 + 2 * 100000);
 		expect(siProtocol.arr2cardNumber([0x12, 0x34, 0x03])).toBe(0x003412 + 3 * 100000);
 		expect(siProtocol.arr2cardNumber([0x12, 0x34, 0x04])).toBe(0x003412 + 4 * 100000);
+
+		// Official SI5 boundaries
+		expect(siProtocol.arr2cardNumber([0x01, 0x00, 0x00])).toBe(1);
+		expect(siProtocol.arr2cardNumber([0xe8, 0xfd, 0x00])).toBe(65000);
+		expect(siProtocol.arr2cardNumber([0xe8, 0xfd, 0x01])).toBe(65000);
+		expect(siProtocol.arr2cardNumber([0x01, 0x00, 0x02])).toBe(200001);
+		expect(siProtocol.arr2cardNumber([0xe8, 0xfd, 0x02])).toBe(265000);
+		expect(siProtocol.arr2cardNumber([0x01, 0x00, 0x03])).toBe(300001);
+		expect(siProtocol.arr2cardNumber([0xe8, 0xfd, 0x03])).toBe(365000);
+		expect(siProtocol.arr2cardNumber([0x01, 0x00, 0x04])).toBe(400001);
+		expect(siProtocol.arr2cardNumber([0xe8, 0xfd, 0x04])).toBe(465000);
+
+		// Si 6 
+		expect(siProtocol.arr2cardNumber([0x20, 0xa1, 0x07])).toBe(500000);
+		expect(siProtocol.arr2cardNumber([0x3f, 0x42, 0x0f])).toBe(999999);
+		// Si 9
+		expect(siProtocol.arr2cardNumber([0x40, 0x42, 0x0f])).toBe(1000000);
+		expect(siProtocol.arr2cardNumber([0x7f, 0x84, 0x1e])).toBe(1999999);
+		// Si 8
+		expect(siProtocol.arr2cardNumber([0x80, 0x84, 0x1e])).toBe(2000000);
+		expect(siProtocol.arr2cardNumber([0xbf, 0xc6, 0x2d])).toBe(2999999);
+		// pCard
+		expect(siProtocol.arr2cardNumber([0x00, 0x09, 0x3d])).toBe(4000000);
+		expect(siProtocol.arr2cardNumber([0x3f, 0x4b, 0x4c])).toBe(4999999);
+		// tCard
+		expect(siProtocol.arr2cardNumber([0x80, 0x8d, 0x5b])).toBe(6000000);
+		expect(siProtocol.arr2cardNumber([0xbf, 0xcf, 0x6a])).toBe(6999999);
+		// SI 10
+		expect(siProtocol.arr2cardNumber([0xc0, 0xcf, 0x6a])).toBe(7000000);
+		expect(siProtocol.arr2cardNumber([0xff, 0x11, 0x7a])).toBe(7999999);
+		// SIAC1
+		expect(siProtocol.arr2cardNumber([0x00, 0x12, 0x7a])).toBe(8000000);
+		expect(siProtocol.arr2cardNumber([0x3f, 0x54, 0x89])).toBe(8999999);
+		// SI 11
+		expect(siProtocol.arr2cardNumber([0x40, 0x54, 0x89])).toBe(9000000);
+		expect(siProtocol.arr2cardNumber([0x7f, 0x96, 0x98])).toBe(9999999);
+		// fCard
+		expect(siProtocol.arr2cardNumber([0x80, 0x9f, 0xd5])).toBe(14000000);
+		expect(siProtocol.arr2cardNumber([0xbf, 0xe1, 0xe4])).toBe(14999999);
+		// Si 6*
+		expect(siProtocol.arr2cardNumber([0x00, 0x00, 0xff])).toBe(16711680);
+		expect(siProtocol.arr2cardNumber([0xff, 0xff, 0xff])).toBe(16777215);
+
 		// the following should actually never appear, as 0x053412 = 341010, which would be represented differently
 		expect(siProtocol.arr2cardNumber([0x12, 0x34, 0x05])).toBe(0x053412);
 		expect(siProtocol.arr2cardNumber([0x12, 0x34, 0x08])).toBe(0x083412);
@@ -162,7 +207,7 @@ describe('siProtocol', () => {
 		expect(siProtocol.cardNumber2arr(undefined)).toEqual([undefined, undefined, undefined, undefined]);
 	});
 	test('consistent cardNumber <=> arr conversion', () => {
-		const cardNumbers = [1000, 10000, 65535, 100000, 165535, 200000, 265535, 300000, 365535, 400000, 465535, 500000, 599999, 999999, 1000000, 1999999, 2000000, 2999999];
+		const cardNumbers = [1000, 10000, 35535, 65000, 200000, 235535, 265000, 300000, 335535, 365000, 400000, 435535, 465000, 500000, 599999, 999999, 1000000, 1999999, 2000000, 2999999];
 		cardNumbers.forEach((cardNumber) => {
 			const arr = siProtocol.cardNumber2arr(cardNumber);
 			const restoredCardNumber = siProtocol.arr2cardNumber(arr);
@@ -445,7 +490,7 @@ describe('siProtocol', () => {
 		test('typeSpecificIsValueValid', () => {
 			expect(mySiTime.typeSpecificIsValueValid({time:0})).toBe(true);
 			expect(mySiTime.typeSpecificIsValueValid({time:43199})).toBe(true);
-			expect(mySiTime.typeSpecificIsValueValid({time:86400})).toBe(false);
+			expect(mySiTime.typeSpecificIsValueValid({time:86401})).toBe(false);
 			expect(mySiTime.typeSpecificIsValueValid(null)).toBe(true);
 		});
 		test('valueToString', () => {

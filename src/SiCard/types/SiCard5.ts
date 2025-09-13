@@ -125,4 +125,17 @@ export class SiCard5 extends BaseSiCard {
 			});
 	}
 }
+
+// According to SI docs, the following ranges are possible 1 - 65000, 200001 - 265000, 300001-365000, 400001-465000
+//  Cardnr | SI 2   | SI1| SI0|
+// --------|--------|----|----|
+//       1 | 0 or 1 | 00 | 01 |
+//   65000 | 0 or 1 | FD | E8 |
+//  200001 |      2 | 00 | 01 |
+//  265000 |      2 | FD | E8 |
+//  300001 |      3 | 00 | 01 |
+//  365000 |      3 | FD | E8 |
+//  400001 |      4 | 00 | 01 |
+//  465000 |      4 | FD | E8 |
+
 BaseSiCard.registerNumberRange(1000, 500000, SiCard5);

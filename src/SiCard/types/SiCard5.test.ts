@@ -13,9 +13,9 @@ describe('SiCard5', () => {
 		expect(BaseSiCard.getTypeByCardNumber(1000)).toEqual(SiCard5);
 		expect(BaseSiCard.getTypeByCardNumber(9999)).toEqual(SiCard5);
 		expect(BaseSiCard.getTypeByCardNumber(10000)).toEqual(SiCard5);
-		expect(BaseSiCard.getTypeByCardNumber(99999)).toEqual(SiCard5);
-		expect(BaseSiCard.getTypeByCardNumber(100000)).toEqual(SiCard5);
-		expect(BaseSiCard.getTypeByCardNumber(499999)).toEqual(SiCard5);
+		expect(BaseSiCard.getTypeByCardNumber(65000)).toEqual(SiCard5);
+		expect(BaseSiCard.getTypeByCardNumber(200000)).toEqual(SiCard5);
+		expect(BaseSiCard.getTypeByCardNumber(465000)).toEqual(SiCard5);
 		expect(BaseSiCard.getTypeByCardNumber(500000)).not.toEqual(SiCard5);
 	});
 	describe('typeSpecificInstanceFromMessage', () => {
@@ -28,7 +28,7 @@ describe('SiCard5', () => {
 				throw new Error('expect instance');
 			}
 			expect(instance instanceof SiCard5).toBe(true);
-			expect(instance.cardNumber).toBe(109029);
+			expect(instance.cardNumber).toBe(9029);
 		});
 		test('returns undefined when message has mode', () => {
 			expect(
