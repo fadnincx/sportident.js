@@ -50,8 +50,15 @@ export const siCard9StorageLocations: storage.ISiStorageLocations<ISiCard9Storag
 			MAX_NUM_PUNCHES,
 			(i) =>
 				new storage.SiDict({
-					code: new storage.SiInt([[getPunchOffset(i) + 1]]),
-					time: new siProtocol.SiTime([[getPunchOffset(i) + 3], [getPunchOffset(i) + 2], [getPunchOffset(i) + 0]])
+					code: new storage.SiInt([
+						[(getPunchOffset(i) + 1)],
+						[getPunchOffset(i) + 0, 7, 8],
+					]),
+					time: new siProtocol.SiTime([
+						[getPunchOffset(i) + 3],
+						[getPunchOffset(i) + 2],
+						[getPunchOffset(i) + 0],
+					])
 				})
 		),
 		(allPunches) => cropPunches(allPunches)
