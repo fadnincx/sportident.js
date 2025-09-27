@@ -75,7 +75,7 @@ export class SiMainStation extends BaseSiStation<SiTargetMultiplexerTarget.Direc
 		return this.atomically(() => {
 			siStationSetupKeys.forEach((infoName: keyof ISiStationStorageFields) => {
 				const oldFieldValue = this.getInfo(infoName);
-				// @ts-ignore
+				// @ts-expect-error - Dynamic assignment to oldState requires bypassing type safety for heterogeneous field types
 				oldState[infoName] = oldFieldValue ? oldFieldValue.value : undefined;
 				const newValue = siStationSetup[infoName];
 				if (newValue !== undefined) {

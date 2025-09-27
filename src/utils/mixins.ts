@@ -5,7 +5,7 @@ export const applyMixins = (derivedCtor: any, baseCtors: any[]): void => {
 			Object.defineProperty(
 				derivedCtor.prototype,
 				name,
-				// @ts-ignore
+				// @ts-expect-error - PropertyDescriptor from getOwnPropertyDescriptor may be undefined but defineProperty accepts it
 				Object.getOwnPropertyDescriptor(baseCtor.prototype, name)
 			);
 		});

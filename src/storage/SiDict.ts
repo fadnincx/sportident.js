@@ -21,7 +21,6 @@ export class SiDict<T> extends SiDataType<SiDictValue<T>> implements ISiDataType
 				if (itemValue === undefined) {
 					return `${String(key)}: ?`;
 				}
-				// @ts-ignore
 				const itemValueString = definition.valueToString(itemValue);
 				return `${String(key)}: ${itemValueString}`;
 			})

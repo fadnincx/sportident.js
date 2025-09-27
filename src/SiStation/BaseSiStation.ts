@@ -103,7 +103,7 @@ export abstract class BaseSiStation<T extends SiTargetMultiplexerTarget> {
 			return existingStationObject;
 		}
 		const instance = createNewInstance();
-		// @ts-ignore
+		// @ts-expect-error - Assignment to indexed access requires bypassing readonly constraint on stations object
 		multiplexer.stations[multiplexerTarget] = instance;
 		// TODO: deregister/close
 		return instance;

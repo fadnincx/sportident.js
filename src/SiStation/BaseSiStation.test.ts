@@ -152,7 +152,7 @@ describe('SiStation', () => {
 			);
 			mySiStation.readInfo().then(() => {
 				Object.keys(stationData).forEach((stationDataKey) => {
-					// @ts-ignore
+					// @ts-expect-error - Dynamic key access requires bypassing type safety as getInfo() expects known field names
 					expect(mySiStation.getInfo(stationDataKey)!.value).toEqual(stationData[stationDataKey]);
 				});
 				done();
