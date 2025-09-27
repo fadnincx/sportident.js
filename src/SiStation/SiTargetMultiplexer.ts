@@ -215,11 +215,16 @@ export class SiTargetMultiplexer implements ISiTargetMultiplexer {
 	}
 
 	_processSendQueue(): void {
-		if (this.sendQueue.length === 0 || this.sendQueue[0].state === SiSendTaskState.Sending || this.sendQueue[0].state === SiSendTaskState.Sent || this.siDevice.state !== SiDeviceState.Opened) {
+		if (this.sendQueue.length === 0 || this.siDevice.state !== SiDeviceState.Opened) {
 			return;
 		}
 
 		const sendTask = this.sendQueue[0];
+
+		// Atomic check-and-set: only proceed if task is in Queued state
+		if (sendTask.state !== SiSendTaskState.Queued) {
+			return;
+		}
 		sendTask.state = SiSendTaskState.Sending;
 		const uint8Data = [proto.WAKEUP, ...siProtocol.render(sendTask.message)];
 		this.siDevice
