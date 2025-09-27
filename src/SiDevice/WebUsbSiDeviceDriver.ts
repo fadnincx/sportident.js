@@ -276,39 +276,44 @@ export class WebUsbSiDeviceDriver
 	}
 
 	async close(device: IWebUsbSiDevice): Promise<void> {
-		console.debug('Disabling Serial...');
+		console.debug('Closing USB device...');
 		const navigatorDevice = device.data.device;
-		navigatorDevice
-			.controlTransferOut({
+
+		// Check if device is already closed
+		if (!navigatorDevice.opened) {
+			console.debug('Device already closed');
+			this.forgetSiDevice(device);
+			return;
+		}
+
+		try {
+			// Step 1: Disable Serial
+			console.debug('Disabling Serial...');
+			await navigatorDevice.controlTransferOut({
 				requestType: 'vendor',
 				recipient: 'interface',
 				request: 0x00,
 				value: 0x00,
 				index: findInterface(navigatorDevice).interfaceNumber
-			})
-			.catch((_e) => {
-				return Promise.reject(new Error('Failed to shutdown usb device'));
-			})
-			.then(() => {
-				console.debug('Releasing Interface...');
-				return navigatorDevice.releaseInterface(findInterface(navigatorDevice).interfaceNumber);
-			})
-			.catch((_e) => {
-				return Promise.reject(new Error('Failed to release claimed usb device interface'));
-			})
-			.then(() => {
-				console.debug('Closing Device...');
-				return navigatorDevice.close();
-			})
-			.catch((_e) => {
-				return Promise.reject(new Error('Failed to close usb device'));
-			})
-			.then(() => {
-				return this.forgetSiDevice(device);
-			})
-			.catch((_e) => {
-				return Promise.reject(new Error('Failed to forget usb device'));
-			})
+			});
+
+			// Step 2: Release Interface
+			console.debug('Releasing Interface...');
+			await navigatorDevice.releaseInterface(findInterface(navigatorDevice).interfaceNumber);
+
+			// Step 3: Close Device
+			console.debug('Closing Device...');
+			await navigatorDevice.close();
+
+		} catch (error) {
+			// Enhanced error handling with context
+			const err = error instanceof Error ? error : new Error(String(error));
+			console.error(`Error during USB device close: ${err.message}`);
+			throw new Error(`Failed to close USB device: ${err.message}`);
+		} finally {
+			// Always clean up our tracking, even if USB operations failed
+			this.forgetSiDevice(device);
+		}
 	}
 
 	receive(device: IWebUsbSiDevice): Promise<number[]> {
