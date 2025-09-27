@@ -4,6 +4,9 @@ import { proto } from '../../constants';
 import type { IBaseSiCardStorageFields } from '../ISiCard';
 import { BaseSiCard } from '../BaseSiCard';
 import type { IPunch } from '../IRaceResultData';
+import * as utils from '../../utils';
+
+const logger = utils.getLogger('SiCard5');
 
 const bytesPerPage = 128;
 const MAX_NUM_PUNCHES = 36;
@@ -110,7 +113,7 @@ export class SiCard5 extends BaseSiCard {
 
 				const readCardNumber = this.storage.get('cardNumber')!.value;
 				if (this.cardNumber !== readCardNumber) {
-					console.warn(`SICard5 Number ${readCardNumber} (expected ${this.cardNumber})`);
+					logger.warn(`Card number mismatch`, { expected: this.cardNumber, actual: readCardNumber });
 				}
 				this.raceResult = {
 					cardNumber: this.storage.get('cardNumber')!.value,

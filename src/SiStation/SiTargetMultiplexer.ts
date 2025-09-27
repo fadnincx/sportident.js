@@ -15,6 +15,8 @@ import { type ISiDevice, type ISiDeviceDriverData, SiDeviceState } from '../SiDe
 import { SiSendTaskState } from './ISiSendTask';
 import { SiSendTask } from './SiSendTask';
 
+const logger = utils.getLogger('SiTargetMultiplexer');
+
 /** Commands that can only be sent from a direct station. */
 export const DIRECT_DEVICE_INITIATED_COMMANDS: { [command: number]: boolean } = {
 	[proto.cmd.TRANS_REC]: true,
@@ -108,7 +110,7 @@ export class SiTargetMultiplexer implements ISiTargetMultiplexer {
 
 	updateSendQueueWithReceivedMessage(message: siProtocol.SiMessage): void {
 		if (message.mode === undefined && DIRECT_DEVICE_INITIATED_COMMANDS[message.command]) {
-			console.debug('Received direct device-initiated command. Assuming target Direct...');
+			logger.debug('Direct device-initiated command received', { assumedTarget: 'Direct' });
 			this.target = SiTargetMultiplexerTarget.Direct;
 			this.latestTarget = SiTargetMultiplexerTarget.Direct;
 		}
@@ -138,7 +140,7 @@ export class SiTargetMultiplexer implements ISiTargetMultiplexer {
 		}
 		if (message.command !== expectedMessage.command) {
 			if (DEVICE_INITIATED_COMMANDS[message.command] !== true) {
-				console.warn(`Strange Response: expected ${utils.prettyHex([expectedMessage.command])}, but got ${utils.prettyHex([message.command])}...`);
+				logger.warn('Unexpected response command', { expected: utils.prettyHex([expectedMessage.command]), actual: utils.prettyHex([message.command]) });
 			}
 			return;
 		}
@@ -236,7 +238,7 @@ export class SiTargetMultiplexer implements ISiTargetMultiplexer {
 				}
 			})
 			.catch((err: utils.SiError) => {
-				console.warn(`Error sending: ${err}`);
+				logger.warn('Send error', { error: String(err) });
 				sendTask.fail();
 			});
 	}

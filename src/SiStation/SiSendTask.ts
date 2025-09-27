@@ -1,5 +1,8 @@
 import * as siProtocol from '../siProtocol';
+import * as utils from '../utils';
 import { SiSendTaskState } from './ISiSendTask';
+
+const logger = utils.getLogger('SiSendTask');
 
 export class SiSendTask {
 	public state: SiSendTaskState = SiSendTaskState.Queued;
@@ -24,7 +27,7 @@ export class SiSendTask {
 			if (!shouldAbortInState[this.state]) {
 				return;
 			}
-			console.debug(`Timeout: ${siProtocol.prettyMessage(this.message)} (expected ${this.numResponses} responses)`, this.responses);
+			logger.debug('Send task timeout', { message: siProtocol.prettyMessage(this.message), expectedResponses: this.numResponses, actualResponses: this.responses });
 			this.fail();
 		}, timeoutInMiliseconds);
 	}

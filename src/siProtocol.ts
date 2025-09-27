@@ -3,17 +3,19 @@ import * as utils from './utils';
 import * as storage from './storage';
 import type { SiIntegerPartDefinition } from './storage/SiInt';
 
+const logger = utils.getLogger('SiProtocol');
+
 export const SI_TIME_CUTOFF = 43200; // Half a day in seconds
 
 export const arr2date = (arr: number[], asOf?: Date): Date | undefined => {
 	utils.assertIsByteArr(arr);
 	utils.assertArrIsOfLengths(arr, [3, 6, 7]);
 	if (arr[0] > 99) {
-		console.warn(`arr2date: Invalid year: ${arr[0]}`);
+		logger.warn(`Invalid date conversion: year out of range`, { year: arr[0], rawData: arr });
 		return undefined;
 	}
 	if (arr[1] === 0) {
-		console.warn(`arr2date: Invalid month: ${arr[1]}`);
+		logger.warn(`Invalid date conversion: month out of range`, { month: arr[1], rawData: arr });
 		return undefined;
 	}
 	const maxYear = asOf ? asOf.getUTCFullYear() : new Date().getUTCFullYear();
@@ -44,7 +46,7 @@ export const arr2date = (arr: number[], asOf?: Date): Date | undefined => {
 		date.getMilliseconds() === Math.floor(milliseconds);
 	if (!isValidDate) {
 		const rawDate = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`;
-		console.warn(`arr2date: Invalid date: ${date} (raw: ${rawDate})`);
+		logger.warn(`Invalid date conversion: date validation failed`, { date: date.toString(), rawDate, rawData: arr });
 		return undefined;
 	}
 	return date;
@@ -170,7 +172,7 @@ export const parse = (inputData: number[]): SiMessageParseResult => {
 	} else if (inputData[0] === proto.NAK) {
 		return specialModeAndProceed(proto.NAK, 1);
 	} else if (inputData[0] !== proto.STX) {
-		console.warn(`Invalid start byte: ${utils.prettyHex([inputData[0]])}`);
+		logger.warn(`Protocol parsing error: invalid start byte`, { startByte: utils.prettyHex([inputData[0]]), expectedSTX: utils.prettyHex([proto.STX]) });
 		return failAndProceed(1);
 	}
 	if (inputData.length <= 1) {
@@ -192,13 +194,13 @@ export const parse = (inputData: number[]): SiMessageParseResult => {
 		return failAndProceed(0);
 	}
 	if (inputData[5 + numParameters] !== proto.ETX) {
-		console.warn(`Invalid ETX byte: ${utils.prettyHex([inputData[5 + numParameters]])}`);
+		logger.warn(`Protocol parsing error: invalid ETX byte`, { etxByte: utils.prettyHex([inputData[5 + numParameters]]), expectedETX: utils.prettyHex([proto.ETX]) });
 		return failAndProceed(1);
 	}
 	const expectedCRC = CRC16(inputData.slice(1, 3 + numParameters));
 	const actualCRC = inputData.slice(3 + numParameters, 5 + numParameters);
 	if (actualCRC.length != expectedCRC.length || !actualCRC.every((value, index) => value === expectedCRC[index])) {
-		console.warn(`Invalid CRC: ${utils.prettyHex(actualCRC)} (expected ${utils.prettyHex(expectedCRC)})`);
+		logger.warn(`Protocol parsing error: CRC validation failed`, { actualCRC: utils.prettyHex(actualCRC), expectedCRC: utils.prettyHex(expectedCRC) });
 		return failAndProceed(6 + numParameters);
 	}
 	return {

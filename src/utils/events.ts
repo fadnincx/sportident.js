@@ -1,4 +1,7 @@
 import * as errorUtils from './errors';
+import { getLogger } from './logging';
+
+const logger = getLogger('Events');
 
 export interface IEvent<T extends string> {
 	type?: T;
@@ -59,8 +62,7 @@ export class EventTarget<T extends EventTypeDict> implements IEventTarget<T> {
 				listener(event);
 			} catch (exc) {
 				const err = errorUtils.getErrorOrThrow(exc);
-				console.error(`Event Listener failed (${String(type)}): ${err.message}`);
-				console.info(err.stack);
+				logger.error(`Event listener failed`, { eventType: String(type), error: err.message, stack: err.stack });
 			}
 		});
 		return !event.defaultPrevented;

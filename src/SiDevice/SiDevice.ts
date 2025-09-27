@@ -1,5 +1,6 @@
 import { DeviceClosedError, type ISiDevice, type ISiDeviceDriverData, type SiDeviceEvents, SiDeviceReceiveEvent, SiDeviceState, SiDeviceStateChangeEvent } from './ISiDevice';
 import * as utils from '../utils';
+import { getLogger } from '../utils/logging';
 import type { ISiDeviceDriver } from './ISiDeviceDriver';
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
@@ -8,6 +9,7 @@ export class SiDevice<T extends ISiDeviceDriverData<ISiDeviceDriver<T>>> impleme
 	ident: string;
 	data: T;
 	private internalState: SiDeviceState;
+	private logger = getLogger('SiDevice');
 
 	constructor(typeSpecificIdent: string, data: T) {
 		this.data = data;
@@ -42,7 +44,7 @@ export class SiDevice<T extends ISiDeviceDriverData<ISiDeviceDriver<T>>> impleme
 			return this.data.driver
 				.open(this)
 				.then(() => {
-					console.debug('Starting Receive Loop...');
+					this.logger.debug('Starting Receive Loop...');
 					this.receiveLoop();
 					this.setState(SiDeviceState.Opened);
 					return this;
@@ -91,24 +93,24 @@ export class SiDevice<T extends ISiDeviceDriverData<ISiDeviceDriver<T>>> impleme
 			}
 			this.receive()
 				.then((uint8Data) => {
-					console.debug(`<= (${this.name})\n${utils.prettyHex(uint8Data, 16)}`);
+					this.logger.debug(`<= (${this.name})\n${utils.prettyHex(uint8Data, 16)}`);
 					this.dispatchEvent('receive', new SiDeviceReceiveEvent(this, uint8Data));
 				})
 				.catch((err: Error) => {
 					if (this.shouldStopReceivingBecauseOfError(err)) {
-						console.warn('Receive loop stopped while receiving');
+						this.logger.warn('Receive loop stopped while receiving');
 						throw err;
 					}
-					console.warn(`${this.name}: Error receiving: ${err.message}`);
+					this.logger.warn(`${this.name}: Error receiving: ${err.message}`);
 					return utils.waitFor(100);
 				})
 				.then(() => this.receiveLoop())
 				.catch(() => undefined);
 		} catch (exc: unknown) {
 			const err = utils.getErrorOrThrow(exc);
-			console.warn(`${this.name}: Error starting receiving: ${err.message}`);
+			this.logger.warn(`${this.name}: Error starting receiving: ${err.message}`);
 			if (this.shouldStopReceivingBecauseOfError(err)) {
-				console.warn('Receive loop stopped while starting receiving');
+				this.logger.warn('Receive loop stopped while starting receiving');
 				return;
 			}
 			utils.waitFor(100).then(() => this.receiveLoop());
@@ -124,7 +126,7 @@ export class SiDevice<T extends ISiDeviceDriverData<ISiDeviceDriver<T>>> impleme
 	}
 
 	send(buffer: number[]): Promise<unknown> {
-		console.debug(`=> (${this.name})\n${utils.prettyHex(buffer, 16)}`);
+		this.logger.debug(`=> (${this.name})\n${utils.prettyHex(buffer, 16)}`);
 		return this.data.driver.send(this, buffer);
 	}
 }

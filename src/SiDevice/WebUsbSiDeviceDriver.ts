@@ -5,6 +5,8 @@ import { SiDeviceAddEvent, SiDeviceRemoveEvent } from '../SiDevice/ISiDeviceDriv
 import type { ISiDeviceDriver, ISiDeviceDriverWithAutodetection, ISiDeviceDriverWithDetection, SiDeviceDriverWithAutodetectionEvents } from '../SiDevice/ISiDeviceDriver';
 import { SiDevice } from '../SiDevice/SiDevice';
 
+const logger = utils.getLogger('WebUsbDriver');
+
 const siConfiguration = 1;
 const siAlternate = 0;
 const siPacketSize = 64;
@@ -157,7 +159,7 @@ export class WebUsbSiDeviceDriver
 				this.dispatchEvent('add', new SiDeviceAddEvent(openedDevice));
 			})
 			.catch(err => {
-				console.warn(`Failed to auto-detect connected device:`, err);
+				logger.warn(`Auto-detection failed for connected device`, { error: String(err) });
 			});
 		};
 		this.navigatorUsb.addEventListener('connect', onConnectCallback);
@@ -169,7 +171,7 @@ export class WebUsbSiDeviceDriver
 			if (siDevice) {
 				// Close device safely with error handling
 				siDevice.close().catch(err =>
-					console.warn(`Error closing disconnected device ${ident}:`, err)
+					logger.warn(`Error closing disconnected device`, { deviceId: ident, error: String(err) })
 				);
 				this.forgetSiDevice(siDevice);
 			}
@@ -202,47 +204,47 @@ export class WebUsbSiDeviceDriver
 	}
 
 	async open(device: IWebUsbSiDevice): Promise<void> {
-		console.debug('Opening...');
+		logger.debug('Opening USB device');
 		const navigatorDevice = device.data.device;
 
 		try{
 			await navigatorDevice.open()
 		}catch(e){
-			console.error("Failed to open web usb device:", e)
+			logger.error('Failed to open USB device', { error: String(e) });
 			return Promise.reject(e)
 		}
 		try {
-			console.debug('Resetting...');
+			logger.debug('Resetting USB device');
 			//await navigatorDevice.releaseInterface(0);
 			await navigatorDevice.reset();
 		} catch (e) {
-			console.error('Failed resetting web usb device:', e);
+			logger.error('Failed to reset USB device', { error: String(e) });
 			return Promise.reject(new Error("Failed resetting web usb device"))
 		}
 
 		try {
-			console.debug('Selecting Configuration...');
+			logger.debug('Selecting USB configuration');
 			await navigatorDevice.selectConfiguration(siConfiguration);
 		} catch (e) {
-			console.error('Failed selecting configuration of web usb device:', e);
+			logger.error('Failed to select USB configuration', { error: String(e) });
 			return Promise.reject(new Error("Failed selecting configuration of web usb device "+e))
 		}
 		try {
-			console.debug('Claiming Interface...');
+			logger.debug('Claiming USB interface');
 			await navigatorDevice.claimInterface(findInterface(navigatorDevice).interfaceNumber);
 		} catch (e) {
-			console.error('Failed claiming web usb device interface:', e);
+			logger.error('Failed to claim USB interface', { error: String(e) });
 			return Promise.reject(new Error("Failed claiming web usb device interface "+e))
 		}
 		try {
-			console.debug('Selection Alternate Interface...');
+			logger.debug('Selecting alternate USB interface');
 			await navigatorDevice.selectAlternateInterface(findInterface(navigatorDevice).interfaceNumber, siAlternate);
 		} catch (e) {
-			console.error('Failed selecting alternate interface web usb device:', e);
+			logger.error('Failed to select alternate USB interface', { error: String(e) });
 			return Promise.reject(new Error("Failed selecting alternate interface web usb device "+e))
 		}
 		try {
-			console.debug('Enabling Serial...');
+			logger.debug('Enabling serial communication');
 			await navigatorDevice.controlTransferOut({
 				requestType: 'vendor',
 				recipient: 'interface',
@@ -251,11 +253,11 @@ export class WebUsbSiDeviceDriver
 				index: findInterface(navigatorDevice).interfaceNumber
 			});
 		} catch (e) {
-			console.error('Failed enabling serial on web usb device:', e);
+			logger.error('Failed to enable serial communication', { error: String(e) });
 			return Promise.reject(new Error("Failed enabling serial on web usb device "+e))
 		}
 		try {
-			console.debug('Setting Baudrate...');
+			logger.debug('Setting baud rate');
 			navigatorDevice.controlTransferOut(
 				{
 					requestType: 'vendor',
@@ -266,30 +268,30 @@ export class WebUsbSiDeviceDriver
 				},
 				new Uint8Array([0x00, 0x96, 0x00, 0x00]).buffer
 			).then(r =>{
-				console.log(r)
+				logger.debug('Baud rate set successfully', { response: r });
 			});
 			return;
 		} catch (e) {
-			console.error('Failed setting baudrate on web usb device:', e);
+			logger.error('Failed to set baud rate', { error: String(e) });
 			return Promise.reject(new Error("Failed setting baudrate on web usb device "+e))
 		}
 
 	}
 
 	async close(device: IWebUsbSiDevice): Promise<void> {
-		console.debug('Closing USB device...');
+		logger.debug('Closing USB device');
 		const navigatorDevice = device.data.device;
 
 		// Check if device is already closed
 		if (!navigatorDevice.opened) {
-			console.debug('Device already closed');
+			logger.debug('Device already closed');
 			this.forgetSiDevice(device);
 			return;
 		}
 
 		try {
 			// Step 1: Disable Serial
-			console.debug('Disabling Serial...');
+			logger.debug('Disabling serial communication');
 			await navigatorDevice.controlTransferOut({
 				requestType: 'vendor',
 				recipient: 'interface',
@@ -299,17 +301,17 @@ export class WebUsbSiDeviceDriver
 			});
 
 			// Step 2: Release Interface
-			console.debug('Releasing Interface...');
+			logger.debug('Releasing USB interface');
 			await navigatorDevice.releaseInterface(findInterface(navigatorDevice).interfaceNumber);
 
 			// Step 3: Close Device
-			console.debug('Closing Device...');
+			logger.debug('Closing USB device connection');
 			await navigatorDevice.close();
 
 		} catch (error) {
 			// Enhanced error handling with context
 			const err = error instanceof Error ? error : new Error(String(error));
-			console.error(`Error during USB device close: ${err.message}`);
+			logger.error('Error during USB device close', { error: err.message });
 			throw new Error(`Failed to close USB device: ${err.message}`);
 		} finally {
 			// Always clean up our tracking, even if USB operations failed
@@ -320,7 +322,7 @@ export class WebUsbSiDeviceDriver
 	receive(device: IWebUsbSiDevice): Promise<number[]> {
 		const navigatorDevice = device.data.device;
 		if (navigatorDevice.opened !== true) {
-			console.warn('Device has been closed. Stopping receive loop.');
+			logger.warn('Device closed, stopping receive loop');
 			device.setState(SiDeviceState.Closed);
 			throw new DeviceClosedError();
 		}

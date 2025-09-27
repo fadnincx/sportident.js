@@ -4,6 +4,9 @@ import { proto } from '../../constants';
 import type { IBaseSiCardStorageFields } from '../ISiCard';
 import { BaseSiCard } from '../BaseSiCard';
 import type { IPunch } from '../IRaceResultData';
+import * as utils from '../../utils';
+
+const logger = utils.getLogger('SiCard6');
 
 class ReadFinishedException {}
 const punchesPerPage = 32;
@@ -153,7 +156,9 @@ export class SiCard6 extends BaseSiCard {
 				1
 			)
 			.then((data: number[][]) => {
-				console.assert(data[0][2] === pageNumber, `Page number ${data[0][2]} retrieved (expected ${pageNumber})`);
+				if (data[0][2] !== pageNumber) {
+					logger.warn(`Page number assertion failed: ${data[0][2]} retrieved (expected ${pageNumber})`);
+				}
 				return data[0].slice(3);
 			});
 	}
@@ -188,7 +193,7 @@ export class SiCard6 extends BaseSiCard {
 
 			const readCardNumber = this.storage.get('cardNumber')!.value;
 			if (this.cardNumber !== readCardNumber) {
-				console.warn(`SICard6 Number ${readCardNumber} (expected ${this.cardNumber})`);
+				logger.warn(`Card number mismatch`, { expected: this.cardNumber, actual: readCardNumber });
 			}
 		});
 	}

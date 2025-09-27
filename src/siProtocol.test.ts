@@ -2,9 +2,12 @@ import { describe, expect, test } from '@jest/globals';
 import { List } from 'immutable';
 import { proto } from './constants';
 import * as utils from './utils';
+import { getLogger } from './utils/logging';
 import * as storage from './storage';
 import * as testUtils from './testUtils';
 import * as siProtocol from './siProtocol';
+
+const logger = getLogger('siProtocol.test');
 
 const json2date = (str: string): Date | undefined => {
 	const res = /^([0-9]{4})-([0-9]{2})-([0-9]{2})T([0-9]{2}):([0-9]{2}):([0-9]{2})\.([0-9]{3})Z$/.exec(str);
@@ -266,7 +269,7 @@ describe('siProtocol', () => {
 	});
 	test('parse with invalid start byte', () => {
 		const invalidStartByte = testUtils.getRandomByteExcept([proto.STX, proto.WAKEUP, proto.NAK]);
-		console.debug(`Chosen invalid start byte: ${utils.prettyHex([invalidStartByte])}`);
+		logger.debug(`Chosen invalid start byte: ${utils.prettyHex([invalidStartByte])}`);
 		expect(siProtocol.parse([invalidStartByte])).toEqual({ message: null, remainder: [] });
 		const randomByte = testUtils.getRandomByte();
 		expect(siProtocol.parse([invalidStartByte, randomByte])).toEqual({
@@ -304,7 +307,7 @@ describe('siProtocol', () => {
 	});
 	test('parse command with invalid ETX', () => {
 		const invalidETX = testUtils.getRandomByteExcept([proto.ETX]);
-		console.debug(`Chosen invalid ETX: ${utils.prettyHex([invalidETX])}`);
+		logger.debug(`Chosen invalid ETX: ${utils.prettyHex([invalidETX])}`);
 		expect(siProtocol.parse([proto.STX, 0x00, 0x00, 0x00, 0x00, invalidETX])).toEqual({
 			message: null,
 			remainder: [0x00, 0x00, 0x00, 0x00, invalidETX]

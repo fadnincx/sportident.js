@@ -1,8 +1,11 @@
 import * as storage from '../../storage';
 import * as siProtocol from '../../siProtocol';
+import * as utils from '../../utils';
 import { cropPunches, getCroppedString, ModernSiCard, ModernSiCardSeries } from './ModernSiCard';
 import type { IBaseSiCardStorageFields } from '../ISiCard';
 import { BaseSiCard } from '../BaseSiCard';
+
+const logger = utils.getLogger('SiCard8');
 
 class ReadFinishedException {}
 const punchesPerPage = 32;
@@ -98,7 +101,7 @@ export class SiCard8 extends ModernSiCard {
 
 					const readCardNumber = this.storage.get('cardNumber')!.value;
 					if (this.cardNumber !== readCardNumber) {
-						console.warn(`SICard8 Number ${readCardNumber} (expected ${this.cardNumber})`);
+						logger.warn('Card number mismatch', { expected: this.cardNumber, actual: readCardNumber });
 					}
 
 					if (this.storage.get('punchCount')!.value <= punchesPerPage * 0) {

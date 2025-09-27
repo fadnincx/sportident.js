@@ -10,6 +10,8 @@ import { type ISiTargetMultiplexer, SiTargetMultiplexerMessageEvent, SiTargetMul
 import { BaseSiStation, type ISiStationStorageFields } from './BaseSiStation';
 import { SiTargetMultiplexer } from './SiTargetMultiplexer';
 
+const logger = utils.getLogger('SiMainStation');
+
 type SiStationSetup = {
 	[key in keyof ISiStationStorageFields]?: ISiStationStorageFields[key];
 };
@@ -36,7 +38,7 @@ export class SiMainStation extends BaseSiStation<SiTargetMultiplexerTarget.Direc
 			(e: SiTargetMultiplexerMessageEvent) => {
 				const message = e.message;
 				this.handleMessage(message);
-				console.log(`There's a SiMainStation listening to this ${message}`);
+				logger.debug(`Received message`, { message: message.toString() });
 			}
 		);
 	}
@@ -103,7 +105,7 @@ export class SiMainStation extends BaseSiStation<SiTargetMultiplexerTarget.Direc
 			if (this.siCard !== null && this.siCard.cardNumber === removedCardNumber) {
 				this.dispatchEvent('siCardRemoved', new SiMainStationSiCardRemovedEvent(this, this.siCard));
 			} else {
-				console.warn(`Card ${removedCardNumber} was removed, but never inserted`);
+				logger.warn(`Card removed without insertion`, { cardNumber: removedCardNumber });
 			}
 			this.siCard = null;
 		};

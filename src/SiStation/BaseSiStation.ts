@@ -1,9 +1,11 @@
 import { proto } from '../constants';
 import * as storage from '../storage';
 import * as siProtocol from '../siProtocol';
+import * as utils from '../utils';
 import { type ISiStation, SiStationMode, SiStationModel } from './ISiStation';
 import { type ISiTargetMultiplexer, SiTargetMultiplexerTarget } from './ISiTargetMultiplexer';
 
+const logger = utils.getLogger('BaseSiStation');
 export interface ISiStationStorageFields {
 	code: number;
 	mode: keyof typeof SiStationMode;
@@ -193,7 +195,7 @@ export abstract class BaseSiStation<T extends SiTargetMultiplexerTarget> {
 				const data = d[0];
 				data.splice(0, 2);
 				if (data[0] !== parameters[0]) {
-					console.warn(`SET_SYS_VAL error: ${data[0]} (expected ${parameters[0]})`);
+					logger.warn('SET_SYS_VAL error', { actual: data[0], expected: parameters[0] });
 				}
 				dirtyRangeIndex += 1;
 				return processDirtyRanges();

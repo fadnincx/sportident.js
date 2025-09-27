@@ -5,6 +5,9 @@ import { BaseSiStation } from './BaseSiStation';
 import { SiTargetMultiplexer } from './SiTargetMultiplexer';
 import { proto } from '../constants';
 import * as siProtocol from '../siProtocol';
+import * as utils from '../utils';
+
+const logger = utils.getLogger('CoupledSiStation');
 
 export class CoupledSiStation extends BaseSiStation<SiTargetMultiplexerTarget.Remote> implements ISiStation<SiTargetMultiplexerTarget.Remote> {
 	static fromSiDevice(siDevice: ISiDevice<ISiDeviceDriverData<unknown>>): CoupledSiStation {
@@ -103,7 +106,7 @@ export class CoupledSiStation extends BaseSiStation<SiTargetMultiplexerTarget.Re
 			}catch(e){
 				if(backupStorageSize >= 2*proto.REC_LEN){
 					backupStorageSize/=2
-					console.log("reduce requested backup block size to", backupStorageSize)
+					logger.info('Reducing backup block size', { newSize: backupStorageSize });
 				}else{
 					return Promise.reject("Unable to read backup data")
 				}

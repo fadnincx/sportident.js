@@ -1,4 +1,5 @@
 import * as utils from '../utils';
+import { getLogger } from '../utils/logging';
 import { DeviceClosedError, type ISiDevice, type ISiDeviceDriverData } from '../SiDevice/ISiDevice';
 import type { ISiDeviceDriver, ISiDeviceDriverWithAutodetection, ISiDeviceDriverWithDetection, SiDeviceDriverWithAutodetectionEvents } from '../SiDevice/ISiDeviceDriver';
 import { SiDeviceAddEvent, SiDeviceRemoveEvent } from '../SiDevice/ISiDeviceDriver';
@@ -29,21 +30,23 @@ export class WebSerialSiDeviceDriver implements ISiDeviceDriver<WebSerialSiDevic
 
 	private reader: ReadableStreamDefaultReader<any> | undefined;
 
+	private logger = getLogger('WebSerialSiDeviceDriver');
+
 	constructor(private navigatorSerial: Serial) {}
 	startAutoDetection(): Promise<ISiDevice<WebSerialSiDeviceDriverData>[]>{
-		console.debug("Start serial autodetection")
+		this.logger.debug('Start serial autodetection');
 		this.navigatorSerial.addEventListener("connect",(event:Event)=>{
-			console.log(event.target,"connected")
+			this.logger.info('Serial device connected:', event.target);
 			const i = getIdent((event.target as SerialPort))
 			if(this.autodetectedSiDevices[i] == undefined){
 				const siDevice = this.getSiDevice((event.target as SerialPort));
 				siDevice.open();
 				SiMainStation.fromSiDevice(siDevice).readInfo().then(_e=>{
-					console.log("got info from si device")
+					this.logger.info('Got info from SI device');
 					this.autodetectedSiDevices[i] = siDevice;
 					this.dispatchEvent('add', new SiDeviceAddEvent(this.autodetectedSiDevices[i]))
 				}).catch(_e => {
-					console.log("failed to get info, probably not si device")
+					this.logger.debug('Failed to get info, probably not SI device');
 					this.dispatchEvent('remove', new SiDeviceRemoveEvent(siDevice))
 					this.forgetSiDevice(siDevice)
 					siDevice.close()
@@ -52,7 +55,7 @@ export class WebSerialSiDeviceDriver implements ISiDeviceDriver<WebSerialSiDevic
 			
 		})
 		this.navigatorSerial.addEventListener("disconnect",(event:Event)=>{
-			console.log(event.target,"disconnected")
+			this.logger.info('Serial device disconnected:', event.target);
 			const i = getIdent((event.target as SerialPort))
 			if(this.autodetectedSiDevices[i] != undefined){
 				this.dispatchEvent('remove', new SiDeviceRemoveEvent(this.autodetectedSiDevices[i]))
@@ -85,13 +88,13 @@ export class WebSerialSiDeviceDriver implements ISiDeviceDriver<WebSerialSiDevic
 				const siDevice = this.getSiDevice(navigatorWebSerialDevice);
 				this.autodetectedSiDevices[ident] = siDevice;
 				navigatorWebSerialDevice.addEventListener("disconnect",()=>{
-					console.log("serial disconnect event, closing si device!")
+					this.logger.info('Serial disconnect event, closing SI device');
 					siDevice.close()
 				})
 				this.navigatorSerial.addEventListener("disconnect",(event:Event)=>{
-					console.log(event.target,"disconnected")
+					this.logger.debug('Serial device disconnected:', event.target);
 					if((event.target as SerialPort) == navigatorWebSerialDevice){
-						console.log("matches device, close sidevice")
+						this.logger.debug('Device matches, closing SI device');
 						siDevice.close()
 					}
 				})
@@ -102,10 +105,10 @@ export class WebSerialSiDeviceDriver implements ISiDeviceDriver<WebSerialSiDevic
 	async getExistingDevices(): Promise<WebSerialSiDevice[]> {
 		return this.navigatorSerial.getPorts().then(async (ports)=>{
 			const r:WebSerialSiDevice[] = []
-			console.log("Ports",ports)
+			this.logger.debug('Available ports:', ports);
 			for(const port of ports){
 				const i = getIdent(port)
-				console.log("Has port with ident ",i)
+				this.logger.debug('Port with ident:', i);
 				if (i == "undefined"){ continue }
 				if(this.autodetectedSiDevices[i] !== undefined){
 					r.push(this.autodetectedSiDevices[i])
@@ -114,13 +117,13 @@ export class WebSerialSiDeviceDriver implements ISiDeviceDriver<WebSerialSiDevic
 					
 					this.autodetectedSiDevices[i] = siDevice;
 					port.addEventListener("disconnect",()=>{
-						console.log("serial disconnect event, closing si device!")
+						this.logger.info('Serial disconnect event, closing SI device');
 						siDevice.close()
 					})
 					this.navigatorSerial.addEventListener("disconnect",(event:Event)=>{
-						console.log(event.target,"disconnected")
+						this.logger.debug('Serial device disconnected:', event.target);
 						if((event.target as SerialPort) == port){
-							console.log("matches device, close sidevice")
+							this.logger.debug('Device matches, closing SI device');
 							siDevice.close()
 						}
 					})
@@ -129,7 +132,7 @@ export class WebSerialSiDeviceDriver implements ISiDeviceDriver<WebSerialSiDevic
 					
 				}
 			}
-			console.log(r)
+			this.logger.debug('Detected SI devices:', r);
 			return r
 		})
 	}
@@ -159,7 +162,7 @@ export class WebSerialSiDeviceDriver implements ISiDeviceDriver<WebSerialSiDevic
 	}
 
 	open(device: IWebSerialSiDevice): Promise<void> {
-		console.debug('Opening...');
+		this.logger.debug('Opening device...');
 		const navigatorDevice = device.data.device;
 		return navigatorDevice.open({ baudRate: 38400 })
 		.catch((_e) => {
@@ -168,14 +171,14 @@ export class WebSerialSiDeviceDriver implements ISiDeviceDriver<WebSerialSiDevic
 	}
 
 	async close(device: IWebSerialSiDevice): Promise<void> {
-		console.debug('Disabling Serial...');
+		this.logger.debug('Disabling Serial...');
 		const navigatorDevice = device.data.device;
 		try {
 			if (this.reader != undefined) {
 				this.reader.releaseLock();
 			}
 		} catch (e) {
-			console.warn(e);
+			this.logger.warn('Error releasing reader lock:', e);
 		}
 		this.forgetSiDevice(device);
 		if(navigatorDevice.readable != null){
@@ -218,7 +221,7 @@ export class WebSerialSiDeviceDriver implements ISiDeviceDriver<WebSerialSiDevic
 		const navigatorDevice = device.data.device;
 		const buffer = new Uint8Array(uint8Data);
 		if (navigatorDevice.writable == null) {
-			console.error('SiStation is not writable!');
+			this.logger.error('SiStation is not writable!');
 			return;
 		}
 		const writer = navigatorDevice.writable.getWriter();

@@ -1,3 +1,7 @@
+import { getLogger } from '../utils/logging';
+
+const logger = getLogger('SiStringEncoding');
+
 const encodingTable = [
 	{
 		dec: '0',
@@ -1356,6 +1360,6 @@ export const siStringToUtf8 = (char: number): string => {
 	if (codingEnry) {
 		return codingEnry.symbol;
 	}
-	console.warn('Could not find ', char.toString(16), ' in si coding table!');
+	logger.warn(`Character not found in SI coding table`, { character: char.toString(16) });
 	return '';
 };

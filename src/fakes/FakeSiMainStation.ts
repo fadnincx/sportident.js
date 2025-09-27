@@ -1,5 +1,6 @@
 import { proto } from '../constants';
 import * as utils from '../utils';
+import { getLogger } from '../utils/logging';
 import type * as storage from '../storage';
 import * as siProtocol from '../siProtocol';
 import { type ISiStationStorageFields, siStationStorageDefinition } from '../SiStation/BaseSiStation';
@@ -12,6 +13,7 @@ export class FakeSiMainStation {
 	public isMaster = true;
 	public dateOffset = 0;
 	public fakeSiCard?: IFakeSiCard;
+	private logger = getLogger('FakeSiMainStation');
 
 	constructor(storageArg: (number | undefined)[] | undefined) {
 		this.storage = siStationStorageDefinition(storageArg);
@@ -74,7 +76,7 @@ export class FakeSiMainStation {
 			});
 		} else if (message.command === proto.cmd.SET_TIME) {
 			const newTime = siProtocol.arr2date(message.parameters.slice(0, 7));
-			console.log(newTime); // TODO: Use new time to set dateOffset
+			this.logger.debug('Setting time:', newTime); // TODO: Use new time to set dateOffset
 			this.dispatchMessage({
 				command: proto.cmd.SET_TIME,
 				parameters: [...this.getCode(), ...siProtocol.date2arr(this.getDateTime())]
