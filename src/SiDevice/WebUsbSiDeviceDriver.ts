@@ -136,11 +136,6 @@ export class WebUsbSiDeviceDriver
 		if (!matchesSiDeviceFilters(navigatorWebUsbDevice.vendorId, navigatorWebUsbDevice.productId)) {
 			return Promise.reject(new Error('Not a SI device'));
 		}
-		this.navigatorUsb.addEventListener("disconnect",(event:USBConnectionEvent)=>{
-			if(event.device == navigatorWebUsbDevice){
-				siDevice.close()
-			}
-		})
 		const ident = getIdent(navigatorWebUsbDevice);
 		if (this.autodetectedSiDevices[ident] !== undefined) {
 			return Promise.reject(new Error('Duplicate SI device'));
@@ -160,16 +155,23 @@ export class WebUsbSiDeviceDriver
 			.then((openedDevice: WebUsbSiDevice) => {
 				this.dispatchEvent('add', new SiDeviceAddEvent(openedDevice));
 			})
+			.catch(err => {
+				console.warn(`Failed to auto-detect connected device:`, err);
+			});
 		};
 		this.navigatorUsb.addEventListener('connect', onConnectCallback);
 		const onDisconnectCallback = (event: USBConnectionEvent) => {
 			const navigatorWebUsbDevice = event.device;
 			const ident = getIdent(navigatorWebUsbDevice);
 			const siDevice = this.siDeviceByIdent[ident];
-			if (siDevice === undefined) {
-				return;
+
+			if (siDevice) {
+				// Close device safely with error handling
+				siDevice.close().catch(err =>
+					console.warn(`Error closing disconnected device ${ident}:`, err)
+				);
+				this.forgetSiDevice(siDevice);
 			}
-			this.forgetSiDevice(siDevice);
 		};
 		this.navigatorUsb.addEventListener('disconnect', onDisconnectCallback);
 		this.autodetectionCallbacks = {
@@ -210,6 +212,7 @@ export class WebUsbSiDeviceDriver
 		}
 		try {
 			console.debug('Resetting...');
+			//await navigatorDevice.releaseInterface(0);
 			await navigatorDevice.reset();
 		} catch (e) {
 			console.error('Failed resetting web usb device:', e);
