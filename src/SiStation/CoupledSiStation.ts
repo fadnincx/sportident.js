@@ -17,7 +17,7 @@ export class CoupledSiStation extends BaseSiStation<SiTargetMultiplexerTarget.Re
 	}
 
 	async getBackupData(turnOff:boolean=true): Promise<{ code: number, cardNumber: number|undefined ; date: Date | undefined}[]> {
-		let backupData: { code: number, cardNumber: number|undefined ; date: Date | undefined}[] = []
+		const backupData: { code: number, cardNumber: number|undefined ; date: Date | undefined}[] = []
 		let backupNextWritePointer:number = 0
 		let hasMemoryOverflow: boolean = false
 
@@ -31,7 +31,7 @@ export class CoupledSiStation extends BaseSiStation<SiTargetMultiplexerTarget.Re
 					}, 
 					1, 10000).then((d) => {
 						backupNextWritePointer = (d[0][3]<<24) | (d[0][4]<<16) | (d[0][8]<<8) | d[0][9]
-					}).catch(async (e) => {
+					}).catch(async (_e) => {
 						await this.sendMessage(
 							{
 								command: proto.WAKEUP,
@@ -52,12 +52,12 @@ export class CoupledSiStation extends BaseSiStation<SiTargetMultiplexerTarget.Re
 			}, 
 			1, 10000).then((d) => {
 				hasMemoryOverflow = d[0][0] != 0
-			}).catch(async (e) => {
+			}).catch(async (_e) => {
 				return Promise.reject(new Error("Unable to read if backup is overflowed or not!"))
 			})
 		
 		let backupReadLocation = hasMemoryOverflow?backupNextWritePointer+1:0x0100
-		let backupMaxLocation = 0x200000
+		const backupMaxLocation = 0x200000
 		let backupStorageSize = 128
 		while(backupReadLocation < backupNextWritePointer && backupReadLocation < backupMaxLocation){
 			try{
@@ -69,12 +69,12 @@ export class CoupledSiStation extends BaseSiStation<SiTargetMultiplexerTarget.Re
 					}, 
 					1, 10000)
 					.then((d) => {
-						let cn = (d[0][0]<<8)|d[0][1]
-						let addr = (d[0][2]<<16)|(d[0][3]<<8)|d[0][4]
+						const cn = (d[0][0]<<8)|d[0][1]
+						const addr = (d[0][2]<<16)|(d[0][3]<<8)|d[0][4]
 						let p = 5
 						while (p<d[0].length){
-							let sicard = siProtocol.arr2cardNumber([d[0][p+2],d[0][p+1],d[0][p+0]])
-							let datedata = [
+							const sicard = siProtocol.arr2cardNumber([d[0][p+2],d[0][p+1],d[0][p+0]])
+							const datedata = [
 								d[0][p+3]>>2, // Year = bit 7-2 
 								(((d[0][p+3]&0x3)<<2)|((d[0][p+4]>>6)&0x3)), // Month = bit 1-0 and 7-6
 								((d[0][p+4]>>1)&0x1F), // day = bit 5-1
@@ -83,7 +83,7 @@ export class CoupledSiStation extends BaseSiStation<SiTargetMultiplexerTarget.Re
 								d[0][p+6],
 								d[0][p+7]
 							]
-							let date = siProtocol.arr2date(datedata)
+							const date = siProtocol.arr2date(datedata)
 							if(addr+p<=backupNextWritePointer||hasMemoryOverflow){
 								backupData.push({code:cn,cardNumber:sicard,date:date})
 							}else{
@@ -130,7 +130,7 @@ export class CoupledSiStation extends BaseSiStation<SiTargetMultiplexerTarget.Re
 					,1,10000
 				).then(()=>{
 					hasTurnedOff = true
-				}).catch(e=>{
+				}).catch(_e=>{
 					hasTurnedOff = false
 				})
 			}

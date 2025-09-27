@@ -46,6 +46,7 @@ interface WebUsbAutodetectionCallbacks {
 export type IWebUsbSiDevice = ISiDevice<WebUsbSiDeviceDriverData>;
 export type WebUsbSiDevice = SiDevice<WebUsbSiDeviceDriverData>;
 
+// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
 export class WebUsbSiDeviceDriver
 	implements ISiDeviceDriver<WebUsbSiDeviceDriverData>, ISiDeviceDriverWithDetection<WebUsbSiDeviceDriverData, []>, ISiDeviceDriverWithAutodetection<WebUsbSiDeviceDriverData>
 {
@@ -338,7 +339,7 @@ export class WebUsbSiDeviceDriver
 		navigatorDevice.transferOut(findEndpoint(findInterface(navigatorDevice), 'out').endpointNumber, buffer).then(() => true);
 	}
 }
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
+// eslint-disable-next-line @typescript-eslint/no-empty-interface,@typescript-eslint/no-unsafe-declaration-merging
 export interface WebUsbSiDeviceDriver extends utils.EventTarget<SiDeviceDriverWithAutodetectionEvents<WebUsbSiDeviceDriverData>> {}
 utils.applyMixins(WebUsbSiDeviceDriver, [utils.EventTarget]);
 

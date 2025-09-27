@@ -1,5 +1,3 @@
-/* globals jest */
-
 import type * as siProtocol from './siProtocol';
 import { jest } from '@jest/globals';
 

@@ -6,6 +6,7 @@ import { type ISiStationStorageFields, siStationStorageDefinition } from '../SiS
 import { type FakeSiMainStationEvents, FakeSiMainStationMessageEvent } from './IFakeSiMainStation';
 import type { IFakeSiCard } from './FakeSiCard/IFakeSiCard';
 
+// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
 export class FakeSiMainStation {
 	public storage: storage.ISiStorage<ISiStationStorageFields>;
 	public isMaster = true;
@@ -113,6 +114,6 @@ export class FakeSiMainStation {
 		}
 	}
 }
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
+// eslint-disable-next-line @typescript-eslint/no-empty-interface,@typescript-eslint/no-unsafe-declaration-merging
 export interface FakeSiMainStation extends utils.EventTarget<FakeSiMainStationEvents> {}
 utils.applyMixins(FakeSiMainStation, [utils.EventTarget]);

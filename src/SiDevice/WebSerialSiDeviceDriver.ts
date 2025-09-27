@@ -19,6 +19,7 @@ export interface WebSerialSiDeviceDriverData extends ISiDeviceDriverData<WebSeri
 export type IWebSerialSiDevice = ISiDevice<WebSerialSiDeviceDriverData>;
 export type WebSerialSiDevice = SiDevice<WebSerialSiDeviceDriverData>;
 
+// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
 export class WebSerialSiDeviceDriver implements ISiDeviceDriver<WebSerialSiDeviceDriverData>, ISiDeviceDriverWithDetection<WebSerialSiDeviceDriverData, []>, ISiDeviceDriverWithAutodetection<WebSerialSiDeviceDriverData> {
 	public name = 'WebSerial';
 
@@ -37,11 +38,11 @@ export class WebSerialSiDeviceDriver implements ISiDeviceDriver<WebSerialSiDevic
 			if(this.autodetectedSiDevices[i] == undefined){
 				const siDevice = this.getSiDevice((event.target as SerialPort));
 				siDevice.open();
-				SiMainStation.fromSiDevice(siDevice).readInfo().then(e=>{
+				SiMainStation.fromSiDevice(siDevice).readInfo().then(_e=>{
 					console.log("got info from si device")
 					this.autodetectedSiDevices[i] = siDevice;
 					this.dispatchEvent('add', new SiDeviceAddEvent(this.autodetectedSiDevices[i]))
-				}).catch(e => {
+				}).catch(_e => {
 					console.log("failed to get info, probably not si device")
 					this.dispatchEvent('remove', new SiDeviceRemoveEvent(siDevice))
 					this.forgetSiDevice(siDevice)
@@ -161,7 +162,7 @@ export class WebSerialSiDeviceDriver implements ISiDeviceDriver<WebSerialSiDevic
 		console.debug('Opening...');
 		const navigatorDevice = device.data.device;
 		return navigatorDevice.open({ baudRate: 38400 })
-		.catch((e) => {
+		.catch((_e) => {
 			return Promise.reject(new Error("Failed to open serial device"))
 		});
 	}
@@ -186,9 +187,10 @@ export class WebSerialSiDeviceDriver implements ISiDeviceDriver<WebSerialSiDevic
 	async receive(device: IWebSerialSiDevice): Promise<number[]> {
 		const navigatorDevice = device.data.device;
 		try {
-			let readable =  navigatorDevice.readable
+			const readable =  navigatorDevice.readable
 			if (readable != null){
 				this.reader = readable.getReader();
+				// eslint-disable-next-line no-constant-condition
 				while (true) {
 					const { value, done } = await this.reader.read();
 					if (done) {
@@ -205,8 +207,6 @@ export class WebSerialSiDeviceDriver implements ISiDeviceDriver<WebSerialSiDevic
 				this.close(device)
 				throw new DeviceClosedError("Device closing!")
 			}
-		} catch (error) {
-			throw error
 		} finally {
 			if(this.reader != undefined){
 				this.reader.releaseLock();
@@ -230,7 +230,7 @@ export class WebSerialSiDeviceDriver implements ISiDeviceDriver<WebSerialSiDevic
 			.then(() => true);
 	}
 }
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
+// eslint-disable-next-line @typescript-eslint/no-empty-interface,@typescript-eslint/no-unsafe-declaration-merging
 export interface WebSerialSiDeviceDriver extends utils.EventTarget<SiDeviceDriverWithAutodetectionEvents<WebSerialSiDeviceDriverData>> {}
 utils.applyMixins(WebSerialSiDeviceDriver, [utils.EventTarget]);
 

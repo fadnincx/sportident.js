@@ -2,5 +2,11 @@ docs/
 coverage/
 node_modules/
 build/
+lib/
+*.d.ts
+tsconfig.tsbuildinfo
+*.backup
+*.async-backup
+.git/
 
 eslint.base.js

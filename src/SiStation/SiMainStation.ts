@@ -16,6 +16,7 @@ type SiStationSetup = {
 
 type CleanUpFunction = () => Promise<void>;
 
+// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
 export class SiMainStation extends BaseSiStation<SiTargetMultiplexerTarget.Direct> implements ISiStation<SiTargetMultiplexerTarget.Direct> {
 	static fromSiDevice(siDevice: ISiDevice<ISiDeviceDriverData<unknown>>): SiMainStation {
 		const multiplexer = SiTargetMultiplexer.fromSiDevice(siDevice);
@@ -128,6 +129,6 @@ export class SiMainStation extends BaseSiStation<SiTargetMultiplexerTarget.Direc
 		handler();
 	}
 }
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
+// eslint-disable-next-line @typescript-eslint/no-empty-interface,@typescript-eslint/no-unsafe-declaration-merging
 export interface SiMainStation extends utils.EventTarget<SiMainStationEvents> {}
 utils.applyMixins(SiMainStation, [utils.EventTarget]);

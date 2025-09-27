@@ -2,6 +2,7 @@ import { DeviceClosedError, type ISiDevice, type ISiDeviceDriverData, type SiDev
 import * as utils from '../utils';
 import type { ISiDeviceDriver } from './ISiDeviceDriver';
 
+// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
 export class SiDevice<T extends ISiDeviceDriverData<ISiDeviceDriver<T>>> implements ISiDevice<T> {
 	name: string;
 	ident: string;

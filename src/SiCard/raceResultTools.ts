@@ -97,7 +97,7 @@ export const getRaceResultFromOrdered = (orderedResult: IOrderedRaceResult): IRa
 				: orderedResult.punches.map((punch: IOrderedPunch) => ({
 						code: punch.code,
 						time: getOrderedTimeIndexIfSet(punch.timeIndex)
-				  }))
+				}))
 	};
 };
 
@@ -145,6 +145,6 @@ export const makeStartZeroTime = (result: IRaceResultData): IRaceResultData => {
 				: result.punches.map((punch: IPunch) => ({
 						...punch,
 						time: deductZeroTimeIfSet(punch.time)
-				  }))
+				}))
 	};
 };

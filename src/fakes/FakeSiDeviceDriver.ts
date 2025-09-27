@@ -21,6 +21,7 @@ export interface FakeSiDeviceDriverData extends ISiDeviceDriverData<FakeSiDevice
 export type IFakeSiDevice = ISiDevice<FakeSiDeviceDriverData>;
 export type FakeSiDevice = SiDevice<FakeSiDeviceDriverData>;
 
+// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
 class FakeSiDeviceDriver implements ISiDeviceDriver<FakeSiDeviceDriverData>, ISiDeviceDriverWithDetection<FakeSiDeviceDriverData, []>, ISiDeviceDriverWithAutodetection<FakeSiDeviceDriverData> {
 	public name = 'Fake';
 
@@ -141,7 +142,7 @@ class FakeSiDeviceDriver implements ISiDeviceDriver<FakeSiDeviceDriverData>, ISi
 		return Promise.resolve(true);
 	}
 }
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
+// eslint-disable-next-line @typescript-eslint/no-empty-interface,@typescript-eslint/no-unsafe-declaration-merging
 interface FakeSiDeviceDriver extends utils.EventTarget<SiDeviceDriverWithAutodetectionEvents<FakeSiDeviceDriverData>> {}
 utils.applyMixins(FakeSiDeviceDriver, [utils.EventTarget]);
 
