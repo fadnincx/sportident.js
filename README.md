@@ -1,4 +1,7 @@
 # sportident.js
+[![GitHub License](https://img.shields.io/github/license/fadnincx/sportident.js)](https://github.com/fadnincx/sportident.js/blob/main/LICENSE)
+[![NPM Version](https://img.shields.io/npm/v/sportident.js)](https://www.npmjs.com/package/sportident.js)
+
 JavaScript/TypeScript interface to SportIdent devices
 
 ## Usage example, read si card numer with serial driver
