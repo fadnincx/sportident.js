@@ -42,7 +42,7 @@ export class CoupledSiStation extends BaseSiStation<SiTargetMultiplexerTarget.Re
 							})
 						await new Promise( resolve => setTimeout(resolve, 500) );
 					})
-			}catch (e){ // ignore, try again
+			}catch{ // ignore, try again
 			}
 		}
 		if(backupNextWritePointer == 0 || backupNextWritePointer == undefined){
@@ -103,7 +103,7 @@ export class CoupledSiStation extends BaseSiStation<SiTargetMultiplexerTarget.Re
 						}
 
 					})
-			}catch(e){
+			}catch{
 				if(backupStorageSize >= 2*proto.REC_LEN){
 					backupStorageSize/=2
 					logger.info('Reducing backup block size', { newSize: backupStorageSize });

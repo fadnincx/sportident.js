@@ -1,0 +1,120 @@
+import js from '@eslint/js';
+import tseslint from '@typescript-eslint/eslint-plugin';
+import tsparser from '@typescript-eslint/parser';
+
+export default [
+    {
+        ignores: [
+            'node_modules/',
+            'lib/',
+            '*.d.ts',
+            'coverage/',
+            '.git/',
+            'tsconfig.tsbuildinfo',
+            '*.backup',
+            '*.async-backup',
+            'docs/',
+            'build/',
+        ],
+    },
+    {
+        files: ['**/*.js', '**/*.jsx'],
+        languageOptions: {
+            ecmaVersion: 2018,
+            sourceType: 'module',
+            globals: {
+                console: 'readonly',
+                process: 'readonly',
+                Buffer: 'readonly',
+                __dirname: 'readonly',
+                __filename: 'readonly',
+                exports: 'writable',
+                module: 'writable',
+                require: 'readonly',
+            },
+        },
+        rules: {
+            ...js.configs.recommended.rules,
+            'no-console': 'warn',
+            'no-warning-comments': 'warn',
+            'no-unused-vars': ['error', {'args': 'none'}],
+        },
+    },
+    {
+        files: ['**/*.ts', '**/*.tsx'],
+        languageOptions: {
+            ecmaVersion: 2018,
+            sourceType: 'module',
+            parser: tsparser,
+            parserOptions: {
+                ecmaVersion: 2018,
+                sourceType: 'module',
+            },
+            globals: {
+                console: 'readonly',
+                process: 'readonly',
+                Buffer: 'readonly',
+                __dirname: 'readonly',
+                __filename: 'readonly',
+                exports: 'writable',
+                module: 'writable',
+                require: 'readonly',
+                setTimeout: 'readonly',
+                setInterval: 'readonly',
+                clearTimeout: 'readonly',
+                clearInterval: 'readonly',
+                SerialPort: 'readonly',
+                Serial: 'readonly',
+                ReadableStreamDefaultReader: 'readonly',
+                Event: 'readonly',
+                USBDevice: 'readonly',
+                USBInterface: 'readonly',
+                USBDirection: 'readonly',
+                USBEndpoint: 'readonly',
+                USBConnectionEvent: 'readonly',
+                USB: 'readonly',
+            },
+        },
+        plugins: {
+            '@typescript-eslint': tseslint,
+        },
+        rules: {
+            ...js.configs.recommended.rules,
+            ...tseslint.configs.recommended.rules,
+            '@typescript-eslint/no-explicit-any': 'warn',
+            '@typescript-eslint/ban-ts-comment': 'warn',
+            '@typescript-eslint/explicit-function-return-type': 'off',
+            '@typescript-eslint/no-empty-object-type': 'off',
+            '@typescript-eslint/no-unused-vars': ['error', {
+                'argsIgnorePattern': '^_',
+                'varsIgnorePattern': '^_',
+            }],
+            'no-unused-vars': 'off',
+            'no-redeclare': 'off',
+        },
+    },
+    {
+        files: ['**/*.test.ts', '**/*.test.tsx'],
+        languageOptions: {
+            globals: {
+                describe: 'readonly',
+                it: 'readonly',
+                test: 'readonly',
+                expect: 'readonly',
+                beforeEach: 'readonly',
+                afterEach: 'readonly',
+                beforeAll: 'readonly',
+                afterAll: 'readonly',
+                jest: 'readonly',
+                performance: 'readonly',
+                global: 'readonly',
+                Console: 'readonly',
+            },
+        },
+        rules: {
+            'no-console': 'off',
+            '@typescript-eslint/no-explicit-any': 'off',
+            '@typescript-eslint/no-unused-vars': 'off',
+        },
+    },
+];
