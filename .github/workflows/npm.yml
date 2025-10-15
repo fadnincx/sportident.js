@@ -11,18 +11,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
-          node-version: "20"
+          node-version: "24"
           registry-url: 'https://registry.npmjs.org'
-
-      # Ensure npm 11.5.1 or later is installed
-      - name: Update npm
-        run: npm install -g npm@latest
       - run: npm ci
       - run: npm test
       - run: npm run build
       - run: cp ./{package.json,LICENSE,README.md} lib/
-      - uses: JS-DevTools/npm-publish@v3
+      - uses: JS-DevTools/npm-publish@v4
         with:
           package: lib
