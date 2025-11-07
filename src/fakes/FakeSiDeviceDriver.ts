@@ -6,7 +6,7 @@ import { SiDeviceAddEvent, SiDeviceRemoveEvent } from '../SiDevice/ISiDeviceDriv
 import type { ISiDeviceDriver, ISiDeviceDriverWithAutodetection, ISiDeviceDriverWithDetection, SiDeviceDriverWithAutodetectionEvents } from '../SiDevice/ISiDeviceDriver';
 import { SiDevice } from '../SiDevice/SiDevice';
 
-interface FakeDevice {
+export interface FakeDevice {
 	ident: string;
 	isOpened: boolean;
 }
@@ -22,7 +22,7 @@ export type IFakeSiDevice = ISiDevice<FakeSiDeviceDriverData>;
 export type FakeSiDevice = SiDevice<FakeSiDeviceDriverData>;
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
-class FakeSiDeviceDriver implements ISiDeviceDriver<FakeSiDeviceDriverData>, ISiDeviceDriverWithDetection<FakeSiDeviceDriverData, []>, ISiDeviceDriverWithAutodetection<FakeSiDeviceDriverData> {
+export class FakeSiDeviceDriver implements ISiDeviceDriver<FakeSiDeviceDriverData>, ISiDeviceDriverWithDetection<FakeSiDeviceDriverData, []>, ISiDeviceDriverWithAutodetection<FakeSiDeviceDriverData> {
 	public name = 'Fake';
 
 	private siDeviceByIdent: { [ident: string]: FakeSiDevice } = {};
@@ -143,7 +143,7 @@ class FakeSiDeviceDriver implements ISiDeviceDriver<FakeSiDeviceDriverData>, ISi
 	}
 }
 // eslint-disable-next-line @typescript-eslint/no-empty-interface,@typescript-eslint/no-unsafe-declaration-merging
-interface FakeSiDeviceDriver extends utils.EventTarget<SiDeviceDriverWithAutodetectionEvents<FakeSiDeviceDriverData>> {}
+export interface FakeSiDeviceDriver extends utils.EventTarget<SiDeviceDriverWithAutodetectionEvents<FakeSiDeviceDriverData>> {}
 utils.applyMixins(FakeSiDeviceDriver, [utils.EventTarget]);
 
 export const getFakeSiDeviceDriver = (): FakeSiDeviceDriver => new FakeSiDeviceDriver();
