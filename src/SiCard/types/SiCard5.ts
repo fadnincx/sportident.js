@@ -100,6 +100,10 @@ export class SiCard5 extends BaseSiCard {
 		return 1;
 	}
 
+	getEstimatedStepTimeMs(): number {
+		return 1500;
+	}
+
 	typeSpecificRead(): Promise<void> {
 		if (!this.mainStation) {
 			return Promise.reject(new Error('No main station'));

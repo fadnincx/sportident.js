@@ -12,21 +12,15 @@ export class SiCardReadStartEvent extends utils.Event<'readStart'> {
 export class SiCardReadProgressEvent extends utils.Event<'readProgress'> {
 	constructor(
 		public siCard: BaseSiCard,
-		public phase: SiCardReadPhase,
+		public phase: SiCardReadPhase | undefined,
 		public currentStep: number,
 		public totalSteps: number,
+		public percentage: number,
 		public pageNumber?: number
 	) {
 		super();
 	}
 
-	get progress(): number {
-		return this.currentStep / this.totalSteps;
-	}
-
-	get percentage(): number {
-		return Math.round(this.progress * 100);
-	}
 }
 
 export class SiCardReadCompleteEvent extends utils.Event<'readComplete'> {

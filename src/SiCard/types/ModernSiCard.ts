@@ -152,6 +152,10 @@ export class ModernSiCard extends BaseSiCard {
 		return 6;
 	}
 
+	getEstimatedStepTimeMs(): number {
+		return 700;
+	}
+
 	typeSpecificGetPage(pageNumber: number): Promise<number[]> {
 		if (!this.mainStation) {
 			return Promise.reject(new Error('No main station'));

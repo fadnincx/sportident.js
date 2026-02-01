@@ -113,6 +113,10 @@ export class PCard extends ModernSiCard {
 		return 2;
 	}
 
+	getEstimatedStepTimeMs(): number {
+		return 800;
+	}
+
 	typeSpecificRead(): Promise<void> {
 		return new Promise((resolve, reject) => {
             this.typeSpecificGetPage(0)

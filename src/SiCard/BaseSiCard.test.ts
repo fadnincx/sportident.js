@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, test } from '@jest/globals';
 import { proto } from '../constants';
 import type * as siProtocol from '../siProtocol';
 import { BaseSiCard } from './BaseSiCard';
+import type { SiCardReadPhase } from './ISiCardEvents';
 
 beforeEach(() => {
 	BaseSiCard.resetNumberRangeRegistry();
@@ -182,6 +183,181 @@ describe('BaseSiCard', () => {
 			finishTime: {time:43200},
 			punches: [{ code: 31, time: {time:1} }],
 			cardHolder: { firstName: 'John' }
+		});
+	});
+
+	describe('progress events', () => {
+		test('emits readStart, readProgress, readComplete on successful read', async () => {
+			class TestCard extends BaseSiCard {
+				getMaxReadSteps() { return 2; }
+				getEstimatedStepTimeMs() { return 10; }
+				typeSpecificRead() {
+					this.emitProgress('basic', 0);
+					this.emitProgress('punches', 1);
+					return Promise.resolve();
+				}
+			}
+
+			const card = new TestCard(123);
+			const events: string[] = [];
+
+			card.addEventListener('readStart', () => events.push('readStart'));
+			card.addEventListener('readProgress', () => events.push('readProgress'));
+			card.addEventListener('readComplete', () => events.push('readComplete'));
+
+			await card.read();
+
+			expect(events).toContain('readStart');
+			expect(events).toContain('readProgress');
+			expect(events).toContain('readComplete');
+			expect(events.indexOf('readStart')).toBe(0);
+			expect(events.indexOf('readComplete')).toBe(events.length - 1);
+		});
+
+		test('emits readError on failed read', async () => {
+			class FailingCard extends BaseSiCard {
+				getEstimatedStepTimeMs() { return 10; }
+				typeSpecificRead() {
+					return Promise.reject(new Error('Test error'));
+				}
+			}
+
+			const card = new FailingCard(123);
+			let errorEvent: Error | undefined;
+
+			card.addEventListener('readError', (e) => {
+				errorEvent = e.error;
+			});
+
+			await expect(card.read()).rejects.toThrow('Test error');
+			expect(errorEvent).toBeDefined();
+			expect(errorEvent?.message).toBe('Test error');
+		});
+
+		test('readStart contains correct totalSteps', async () => {
+			class TestCard extends BaseSiCard {
+				getMaxReadSteps() { return 4; }
+				getEstimatedStepTimeMs() { return 10; }
+				typeSpecificRead() { return Promise.resolve(); }
+			}
+
+			const card = new TestCard(123);
+			let totalSteps: number | undefined;
+
+			card.addEventListener('readStart', (e) => {
+				totalSteps = e.totalSteps;
+			});
+
+			await card.read();
+
+			expect(totalSteps).toBe(4);
+		});
+
+		test('milestone progress events have correct percentage', async () => {
+			class TestCard extends BaseSiCard {
+				getMaxReadSteps() { return 2; }
+				getEstimatedStepTimeMs() { return 10; }
+				typeSpecificRead() {
+					this.emitProgress('basic', 0);
+					this.emitProgress('punches', 1);
+					return Promise.resolve();
+				}
+			}
+
+			const card = new TestCard(123);
+			const percentages: number[] = [];
+			const phases: (SiCardReadPhase | undefined)[] = [];
+
+			card.addEventListener('readProgress', (e) => {
+				if (e.phase !== undefined) {
+					percentages.push(e.percentage);
+					phases.push(e.phase);
+				}
+			});
+
+			await card.read();
+
+			expect(percentages).toContain(50);
+			expect(percentages).toContain(100);
+			expect(phases).toContain('basic');
+			expect(phases).toContain('punches');
+		});
+
+		test('interpolated progress is less than milestone', async () => {
+			class TestCard extends BaseSiCard {
+				getMaxReadSteps() { return 1; }
+				getEstimatedStepTimeMs() { return 200; }
+				typeSpecificRead() {
+					return new Promise<void>((resolve) => {
+						setTimeout(() => {
+							this.emitProgress('basic', 0);
+							resolve();
+						}, 100);
+					});
+				}
+			}
+
+			const card = new TestCard(123);
+			const percentages: number[] = [];
+
+			card.addEventListener('readProgress', (e) => {
+				percentages.push(e.percentage);
+			});
+
+			await card.read();
+
+			const interpolatedPercentages = percentages.slice(0, -1);
+			const milestonePercentage = percentages[percentages.length - 1];
+			expect(milestonePercentage).toBe(100);
+			for (const pct of interpolatedPercentages) {
+				expect(pct).toBeLessThan(100);
+			}
+		});
+
+		test('progress event contains siCard reference', async () => {
+			class TestCard extends BaseSiCard {
+				getMaxReadSteps() { return 1; }
+				getEstimatedStepTimeMs() { return 10; }
+				typeSpecificRead() {
+					this.emitProgress('basic', 0);
+					return Promise.resolve();
+				}
+			}
+
+			const card = new TestCard(123);
+			let eventCard: BaseSiCard | undefined;
+
+			card.addEventListener('readProgress', (e) => {
+				eventCard = e.siCard;
+			});
+
+			await card.read();
+
+			expect(eventCard).toBe(card);
+		});
+
+		test('progress event contains pageNumber when provided', async () => {
+			class TestCard extends BaseSiCard {
+				getMaxReadSteps() { return 1; }
+				getEstimatedStepTimeMs() { return 10; }
+				typeSpecificRead() {
+					this.emitProgress('basic', 42);
+					return Promise.resolve();
+				}
+			}
+
+			const card = new TestCard(123);
+			let pageNumber: number | undefined;
+
+			card.addEventListener('readProgress', (e) => {
+				if (e.phase !== undefined) {
+					pageNumber = e.pageNumber;
+				}
+			});
+
+			await card.read();
+
+			expect(pageNumber).toBe(42);
 		});
 	});
 });
