@@ -47,7 +47,7 @@ describe('PCard', () => {
         test('returns undefined when the series does not match', () => {
             expect(PCard.typeSpecificInstanceFromMessage({
                 command: proto.cmd.SI8_DET,
-                parameters: [0x00, 0x00, testUtils.getRandomByteExcept([ModernSiCardSeries.PCard]), 0x22, 0x22, 0x22],
+                parameters: [0x00, 0x00, testUtils.getRandomByteExcept(Object.values(ModernSiCardSeries)), 0x22, 0x22, 0x22],
             })).toBe(undefined);
         });
     });

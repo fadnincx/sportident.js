@@ -8,9 +8,7 @@ export class SIAC extends ModernSiCard {
 		if (info === undefined) {
 			return undefined;
 		}
-		// if (info.cardSeries !== ModernSiCardSeries.SIAC) {
-		// TODO: find out the series value and remove this hack
-		if (info.cardNumber < 8000000 || info.cardNumber >= 9000000) {
+		if (info.cardSeries !== 'SIAC') {
 			return undefined;
 		}
 		return new this(info.cardNumber);

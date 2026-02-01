@@ -16,7 +16,7 @@ describe('SIAC', () => {
 		test('works for valid message', () => {
 			const instance = SIAC.typeSpecificInstanceFromMessage({
 				command: proto.cmd.SI8_DET,
-				parameters: [0x00, 0x00, /* TODO: */ 0x00, 0x88, 0x88, 0x88]
+				parameters: [0x00, 0x00, 0x0f, 0x88, 0x88, 0x88]  // SI3=0x0F for SIAC
 			});
 			if (instance === undefined) {
 				throw new Error('expect instance');
@@ -51,7 +51,7 @@ describe('SIAC', () => {
 			expect(
 				SIAC.typeSpecificInstanceFromMessage({
 					command: proto.cmd.SI8_DET,
-					parameters: [0x00, 0x00, /* TODO: */ 0x00, 0x22, 0x22, 0x22]
+					parameters: [0x00, 0x00, 0x0f, 0x77, 0x77, 0x77]  // SI3=0x0F but card number 7829367 is SiCard10 range
 				})
 			).toBe(undefined);
 		});

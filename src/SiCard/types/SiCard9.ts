@@ -1,7 +1,7 @@
 import * as storage from '../../storage';
 import * as siProtocol from '../../siProtocol';
 import * as utils from '../../utils';
-import { cropPunches, getCroppedString, ModernSiCard, ModernSiCardSeries } from './ModernSiCard';
+import { cropPunches, getCroppedString, ModernSiCard, ModernSiCardSeries, cardSeriesStorageLocation } from './ModernSiCard';
 import type { IBaseSiCardStorageFields } from '../ISiCard';
 import { BaseSiCard } from '../BaseSiCard';
 
@@ -35,7 +35,7 @@ export interface ISiCard9StorageFields extends IBaseSiCardStorageFields {
 
 export const siCard9StorageLocations: storage.ISiStorageLocations<ISiCard9StorageFields> = {
 	uid: new storage.SiInt([[0x03], [0x02], [0x01], [0x00]]),
-	cardSeries: new storage.SiEnum([[0x18]], ModernSiCardSeries),
+	cardSeries: cardSeriesStorageLocation,
 	cardNumber: new storage.SiModified(
 		new storage.SiArray(3, (i) => new storage.SiInt([[0x19 + (2 - i)]])),
 		(extractedValue) => siProtocol.arr2cardNumber(extractedValue)

@@ -14,16 +14,48 @@ const bytesPerPage = 128;
 
 const MAX_NUM_PUNCHES = 128;
 
+// SI3 byte values for card series - includes all card types
+// Note: SiCard10, SiCard11, SIAC all share SI3=0x0F - distinguished by card number range
 export const ModernSiCardSeries = {
 	SiCard8: 0x02,
 	SiCard9: 0x01,
 	SiCard10: 0x0f,
+	SiCard11: 0x0f,  // Same SI3 as SiCard10 - distinguished by card number range
+	SIAC: 0x0f,      // Same SI3 as SiCard10 - distinguished by card number range
 	PCard: 0x04,
-	TCard: 0x06
-	// TODO: Find out these values
-	// SiCard11: ?,
-	// SIAC: ?,
-	// FCard: ?,
+	TCard: 0x06,
+	FCard: 0x0e,
+};
+
+// Detect card series from SI bytes (uses card number ranges for SI3=0x0F)
+export const getModernSiCardSeries = (
+	si0: number,
+	si1: number,
+	si2: number,
+	si3: number
+): keyof typeof ModernSiCardSeries | undefined => {
+	// Unique SI3 values - can determine series directly
+	switch (si3) {
+		case 0x01: return 'SiCard9';
+		case 0x02: return 'SiCard8';
+		case 0x04: return 'PCard';
+		case 0x06: return 'TCard';
+		case 0x0e: return 'FCard';
+	}
+
+	// SI3 = 0x0F: need to check card number range
+	if (si3 === 0x0f) {
+		const cardNumber = siProtocol.arr2cardNumber([si0, si1, si2]);
+		if (cardNumber !== undefined) {
+			if (cardNumber >= 7000000 && cardNumber < 8000000) return 'SiCard10';
+			if (cardNumber >= 8000000 && cardNumber < 9000000) return 'SIAC';
+			if (cardNumber >= 9000000 && cardNumber < 10000000) return 'SiCard11';
+		}
+		// Default for SI3=0x0F with unknown/out-of-range card number
+		return 'SiCard10';
+	}
+
+	return undefined;
 };
 
 export interface PotentialModernSiCardPunch {
@@ -75,9 +107,28 @@ export interface IModernSiCardStorageFields extends IBaseSiCardStorageFields {
 	cardSeries: keyof typeof ModernSiCardSeries;
 }
 
+// Shared storage location for cardSeries - reads SI bytes and computes the correct series
+export const cardSeriesStorageLocation = new storage.SiModified(
+	new storage.SiDict({
+		si3: new storage.SiInt([[0x18]]),
+		si0: new storage.SiInt([[0x1b]]),
+		si1: new storage.SiInt([[0x1a]]),
+		si2: new storage.SiInt([[0x19]]),
+	}),
+	(data) => {
+		if (data.si0 === undefined || data.si1 === undefined ||
+			data.si2 === undefined || data.si3 === undefined) {
+			return undefined;
+		}
+		return getModernSiCardSeries(data.si0, data.si1, data.si2, data.si3);
+	},
+	undefined, // modifyForUpdate - not needed for read-only
+	(value) => value // modifiedToString - enum value is already a string
+);
+
 export const modernSiCardStorageLocations: storage.ISiStorageLocations<IModernSiCardStorageFields> = {
 	uid: new storage.SiInt([[0x03], [0x02], [0x01], [0x00]]),
-	cardSeries: new storage.SiEnum([[0x18]], ModernSiCardSeries),
+	cardSeries: cardSeriesStorageLocation,
 	cardNumber: new storage.SiModified(
 		new storage.SiArray(3, (i) => new storage.SiInt([[0x19 + (2 - i)]])),
 		(extractedValue) => siProtocol.arr2cardNumber(extractedValue)
@@ -125,17 +176,24 @@ export class ModernSiCard extends BaseSiCard {
 		if (message.parameters.length < 6) {
 			return undefined;
 		}
-		const cardNumber = siProtocol.arr2cardNumber([message.parameters[5], message.parameters[4], message.parameters[3]]);
+
+		const si0 = message.parameters[5];
+		const si1 = message.parameters[4];
+		const si2 = message.parameters[3];
+		const si3 = message.parameters[2];
+
+		const cardNumber = siProtocol.arr2cardNumber([si0, si1, si2]);
 		/* istanbul ignore next */
 		if (cardNumber === undefined) {
 			throw new Error('card number cannot be undefined');
 		}
-		const cardSeries = message.parameters[2];
-		const lookup = utils.getLookup(ModernSiCardSeries);
-		return {
-			cardNumber: cardNumber,
-			cardSeries: lookup[cardSeries] as keyof typeof ModernSiCardSeries
-		};
+
+		const cardSeries = getModernSiCardSeries(si0, si1, si2, si3);
+		if (cardSeries === undefined) {
+			return undefined;
+		}
+
+		return { cardNumber, cardSeries };
 	}
 
 	public storage: storage.ISiStorage<IModernSiCardStorageFields>;
