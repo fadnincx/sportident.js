@@ -1,7 +1,7 @@
 import * as utils from '../utils';
 import type { BaseSiCard } from './BaseSiCard';
 
-export type SiCardReadPhase = 'basic' | 'cardHolder' | 'punches';
+export type SiCardReadPhase = 'basic' | 'cardHolder' | 'punches' | 'battery';
 
 export class SiCardReadStartEvent extends utils.Event<'readStart'> {
 	constructor(public siCard: BaseSiCard, public totalSteps: number) {
