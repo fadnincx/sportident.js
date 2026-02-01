@@ -3,3 +3,4 @@ export { BaseSiStation } from './BaseSiStation';
 export { SiMainStation } from './SiMainStation';
 export { CoupledSiStation } from './CoupledSiStation';
 export { getSiStationExamples } from './siStationExamples';
+export * from './ISiStationEvents';

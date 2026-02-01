@@ -14,6 +14,10 @@ export const advanceTimersByTime = async (msToRun: number): Promise<void> => {
 	await Promise.resolve();
 };
 
+export const advanceTimersByTimeAsync = async (msToRun: number): Promise<void> => {
+	await jest.advanceTimersByTimeAsync(msToRun);
+};
+
 export const nTimesAsync = async (n: number, doThing: () => Promise<unknown>): Promise<void> => {
 	if (n <= 0) {
 		return;
