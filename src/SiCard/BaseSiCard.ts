@@ -4,6 +4,14 @@ import type * as siProtocol from '../siProtocol';
 import type * as storage from '../storage';
 import type { IRaceResultData } from './IRaceResultData';
 import { makeStartZeroTime, monotonizeRaceResult, prettyRaceResult } from './raceResultTools';
+import {
+	type SiCardReadEvents,
+	type SiCardReadPhase,
+	SiCardReadStartEvent,
+	SiCardReadProgressEvent,
+	SiCardReadCompleteEvent,
+	SiCardReadErrorEvent
+} from './ISiCardEvents';
 
 export type SiCardType<T extends BaseSiCard> = {
 	new (cardNumber: number): T;
@@ -15,6 +23,7 @@ export interface ISiMainStation {
 	sendMessage: (message: siProtocol.SiMessage, numResponses?: number, timeoutInMiliseconds?: number) => Promise<number[][]>;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
 export abstract class BaseSiCard {
 	// abstract static maxNumPunches: number;
 	static NumberRange: typeof utils.NumberRange = utils.NumberRange;
@@ -55,6 +64,7 @@ export abstract class BaseSiCard {
 	public mainStation?: ISiMainStation | undefined;
 	public raceResult: IRaceResultData & { cardNumber: number };
 	public storage: storage.ISiStorage<unknown> = {} as storage.ISiStorage<unknown>;
+	private readStep = 0;
 
 	constructor(cardNumber: number) {
 		this.raceResult = { cardNumber: cardNumber };
@@ -64,8 +74,34 @@ export abstract class BaseSiCard {
 		return this.raceResult.cardNumber;
 	}
 
+	getMaxReadSteps(): number {
+		return 1;
+	}
+
 	read(): Promise<BaseSiCard> {
-		return this.typeSpecificRead().then(() => this);
+		this.readStep = 0;
+		const totalSteps = this.getMaxReadSteps();
+		this.dispatchEvent('readStart', new SiCardReadStartEvent(this, totalSteps));
+		return this.typeSpecificRead()
+			.then(() => {
+				this.dispatchEvent('readComplete', new SiCardReadCompleteEvent(this));
+				return this;
+			})
+			.catch((error: Error) => {
+				this.dispatchEvent('readError', new SiCardReadErrorEvent(this, error));
+				throw error;
+			});
+	}
+
+	protected emitProgress(phase: SiCardReadPhase, pageNumber?: number): void {
+		this.readStep++;
+		this.dispatchEvent('readProgress', new SiCardReadProgressEvent(
+			this,
+			phase,
+			this.readStep,
+			this.getMaxReadSteps(),
+			pageNumber
+		));
 	}
 
 	getNormalizedRaceResult(): IRaceResultData {
@@ -98,3 +134,6 @@ export abstract class BaseSiCard {
 		return `${this.constructor.name}\n${prettyRaceResult(this.raceResult)}`;
 	}
 }
+// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
+export interface BaseSiCard extends utils.EventTarget<SiCardReadEvents> {}
+utils.applyMixins(BaseSiCard, [utils.EventTarget]);

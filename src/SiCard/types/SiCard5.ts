@@ -96,6 +96,10 @@ export class SiCard5 extends BaseSiCard {
 		this.storage = siCard5StorageDefinition();
 	}
 
+	getMaxReadSteps(): number {
+		return 1;
+	}
+
 	typeSpecificRead(): Promise<void> {
 		if (!this.mainStation) {
 			return Promise.reject(new Error('No main station'));
@@ -110,6 +114,7 @@ export class SiCard5 extends BaseSiCard {
 			)
 			.then((data: number[][]) => {
 				this.storage.splice(bytesPerPage * 0, bytesPerPage, ...data[0].slice(2));
+				this.emitProgress('basic', 0);
 
 				const readCardNumber = this.storage.get('cardNumber')!.value;
 				if (this.cardNumber !== readCardNumber) {

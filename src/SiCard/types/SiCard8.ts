@@ -93,11 +93,16 @@ export class SiCard8 extends ModernSiCard {
 		this.storage = siCard8StorageDefinition();
 	}
 
+	getMaxReadSteps(): number {
+		return 2;
+	}
+
 	typeSpecificRead(): Promise<void> {
 		return new Promise((resolve, reject) => {
 			this.typeSpecificGetPage(0)
 				.then((page0: number[]) => {
 					this.storage.splice(bytesPerPage * 0, bytesPerPage, ...page0);
+					this.emitProgress('basic', 0);
 
 					const readCardNumber = this.storage.get('cardNumber')!.value;
 					if (this.cardNumber !== readCardNumber) {
@@ -111,6 +116,7 @@ export class SiCard8 extends ModernSiCard {
 				})
 				.then((page1: number[]) => {
 					this.storage.splice(bytesPerPage * 1, bytesPerPage, ...page1);
+					this.emitProgress('punches', 1);
 					throw new ReadFinishedException();
 				})
 				.catch((exc: Error) => {

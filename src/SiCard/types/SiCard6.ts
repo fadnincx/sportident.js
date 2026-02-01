@@ -143,6 +143,10 @@ export class SiCard6 extends BaseSiCard {
 		this.storage = siCard6StorageDefinition();
 	}
 
+	getMaxReadSteps(): number {
+		return 4;
+	}
+
 	typeSpecificGetPage(pageNumber: number): Promise<number[]> {
 		if (!this.mainStation) {
 			return Promise.reject(new Error('No main station'));
@@ -190,6 +194,7 @@ export class SiCard6 extends BaseSiCard {
 	typeSpecificReadBasic(): Promise<void> {
 		return this.typeSpecificGetPage(0).then((page0: number[]) => {
 			this.storage.splice(bytesPerPage * 0, bytesPerPage, ...page0);
+			this.emitProgress('basic', 0);
 
 			const readCardNumber = this.storage.get('cardNumber')!.value;
 			if (this.cardNumber !== readCardNumber) {
@@ -202,6 +207,7 @@ export class SiCard6 extends BaseSiCard {
 		// TODO: test this with real device
 		return this.typeSpecificGetPage(1).then((page1: number[]) => {
 			this.storage.splice(bytesPerPage * 1, bytesPerPage, ...page1);
+			this.emitProgress('cardHolder', 1);
 		});
 	}
 
@@ -212,6 +218,7 @@ export class SiCard6 extends BaseSiCard {
 		return this.typeSpecificGetPage(6)
 			.then((page6: number[]) => {
 				this.storage.splice(bytesPerPage * 6, bytesPerPage, ...page6);
+				this.emitProgress('punches', 6);
 				if (this.storage.get('punchCount')!.value <= punchesPerPage * 1) {
 					throw new ReadFinishedException();
 				}
@@ -219,6 +226,7 @@ export class SiCard6 extends BaseSiCard {
 			})
 			.then((page7: number[]) => {
 				this.storage.splice(bytesPerPage * 7, bytesPerPage, ...page7);
+				this.emitProgress('punches', 7);
 				throw new ReadFinishedException();
 			})
 			.catch((exc: Error) => {

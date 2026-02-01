@@ -7,6 +7,10 @@ export class FCard extends BaseSiCard {
 		return undefined;
 	}
 
+	getMaxReadSteps(): number {
+		return 0; // Not implemented
+	}
+
 	typeSpecificRead(): Promise<void> {
 		return Promise.reject(new utils.NotImplementedError());
 	}
