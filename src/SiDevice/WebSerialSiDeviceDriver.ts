@@ -98,7 +98,11 @@ export class WebSerialSiDeviceDriver implements ISiDeviceDriver<WebSerialSiDevic
 						siDevice.close()
 					}
 				})
-				return siDevice.open();
+				return siDevice.open().catch((e: unknown) => {
+					delete this.autodetectedSiDevices[ident];
+					delete this.siDeviceByIdent[ident];
+					return Promise.reject(e);
+				});
 			});
 	}
 

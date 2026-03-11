@@ -145,7 +145,11 @@ export class WebUsbSiDeviceDriver
 		}
 		const siDevice = this.getSiDevice(navigatorWebUsbDevice);
 		this.autodetectedSiDevices[ident] = siDevice;
-		return siDevice.open();
+		return siDevice.open().catch((e: unknown) => {
+			delete this.autodetectedSiDevices[ident];
+			delete this.siDeviceByIdent[ident];
+			return Promise.reject(e);
+		});
 	}
 
 	registerAutodetectionCallbacks(): void {
