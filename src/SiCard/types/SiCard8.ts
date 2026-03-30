@@ -94,7 +94,11 @@ export class SiCard8 extends ModernSiCard {
 	}
 
 	getMaxReadSteps(): number {
-		return 2;
+		const punchCount = this.storage.get('punchCount')?.value;
+		if (punchCount !== undefined) {
+			return punchCount > 0 ? 2 : 1;
+		}
+		return 2; // worst case: basic + punches
 	}
 
 	getEstimatedStepTimeMs(): number {

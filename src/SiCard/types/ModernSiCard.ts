@@ -207,7 +207,12 @@ export class ModernSiCard extends BaseSiCard {
 	}
 
 	getMaxReadSteps(): number {
-		return 6;
+		const punchCount = this.storage.get('punchCount')?.value;
+		if (punchCount !== undefined) {
+			const punchPages = punchCount === 0 ? 0 : Math.min(Math.ceil(punchCount / punchesPerPage), 4);
+			return 2 + punchPages; // basic + cardHolder + punch pages
+		}
+		return 6; // worst case: basic + cardHolder + 4 punch pages
 	}
 
 	getEstimatedStepTimeMs(): number {

@@ -144,7 +144,12 @@ export class SiCard6 extends BaseSiCard {
 	}
 
 	getMaxReadSteps(): number {
-		return 4;
+		const punchCount = this.storage.get('punchCount')?.value;
+		if (punchCount !== undefined) {
+			const punchPages = punchCount === 0 ? 0 : Math.min(Math.ceil(punchCount / punchesPerPage), 2);
+			return 2 + punchPages; // basic + cardHolder + punch pages
+		}
+		return 4; // worst case: basic + cardHolder + 2 punch pages
 	}
 
 	getEstimatedStepTimeMs(): number {

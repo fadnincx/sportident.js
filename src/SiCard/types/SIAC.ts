@@ -136,7 +136,10 @@ export class SIAC extends ModernSiCard {
 
 	typeSpecificReadBattery(): Promise<void> {
 		return this.triggerBatteryMeasurement()
-			.then(() => this.typeSpecificGetPage(3))
+			.then(() => {
+				this.emitProgress('battery');
+				return this.typeSpecificGetPage(3);
+			})
 			.then((page3: number[]) => {
 				this.storage.splice(bytesPerPage * 3, bytesPerPage, ...page3);
 				this.emitProgress('battery', 3);
@@ -159,7 +162,12 @@ export class SIAC extends ModernSiCard {
 	}
 
 	getMaxReadSteps(): number {
-		return 8; // pages 0, 1, measurement, 3, 4, 5, 6, 7
+		const punchCount = this.storage.get('punchCount')?.value;
+		if (punchCount !== undefined) {
+			const punchPages = punchCount === 0 ? 0 : Math.min(Math.ceil(punchCount / 32), 4);
+			return 4 + punchPages; // basic + cardHolder + measurement + battery + punch pages
+		}
+		return 8; // worst case: basic + cardHolder + measurement + battery + 4 punch pages
 	}
 
 	getBatteryVoltageV(): number | undefined {
