@@ -45,7 +45,12 @@ export const siCard5StorageLocations: storage.ISiStorageLocations<ISiCard5Storag
 	startTime: new siProtocol.SiTime([[0x14], [0x13]]),
 	finishTime: new siProtocol.SiTime([[0x16], [0x15]]),
 	checkTime: new siProtocol.SiTime([[0x1a], [0x19]]),
-	punchCount: new storage.SiModified(new storage.SiInt([[0x17]]), (extractedValue) => extractedValue - 1),
+	punchCount: new storage.SiModified(new storage.SiInt([[0x17]]), (extractedValue) => {
+		if (extractedValue === 0xEE || extractedValue === 0xFF) {
+			return 0;
+		}
+		return Math.min(extractedValue - 1, MAX_NUM_PUNCHES);
+	}),
 	punches: new storage.SiModified(
 		new storage.SiArray(
 			MAX_NUM_PUNCHES,
