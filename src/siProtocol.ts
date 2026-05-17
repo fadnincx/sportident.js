@@ -401,7 +401,14 @@ export class SiTime extends storage.SiDataType<SiTimestamp> implements storage.I
 		if (this.intFieldTime12 === undefined) {
 			return data;
 		}
-		const newIntValue = newValue === null ? proto.NO_TIME : newValue.time;
+		let newIntValue: number;
+		if (newValue === null) {
+			newIntValue = proto.NO_TIME;
+		} else if (this.intFieldAmPm !== undefined && newValue.time >= SI_TIME_CUTOFF) {
+			newIntValue = newValue.time - SI_TIME_CUTOFF;
+		} else {
+			newIntValue = newValue.time;
+		}
 		let tempData = this.intFieldTime12.typeSpecificUpdateData(data, newIntValue);
 		if (this.intFieldAmPm !== undefined && newValue != null) {
 			tempData = this.intFieldAmPm.typeSpecificUpdateData(tempData, newValue.time >= 43200?1:0)
