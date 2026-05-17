@@ -110,7 +110,7 @@ export const monotonizeOrderedRaceResult = (orderedData: IOrderedRaceResult): IO
 				currentCarry += siProtocol.SI_TIME_CUTOFF;
 			}
 			lastTime = ts.time;
-			ts.time += currentCarry
+			return {...ts, time: ts.time + currentCarry};
 		}
 		return ts;
 	});
