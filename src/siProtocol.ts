@@ -341,8 +341,8 @@ export class SiTime extends storage.SiDataType<SiTimestamp> implements storage.I
 
 	typeSpecificIsValueValid(value: SiTimestamp): boolean {
 		return value === null || 
-		(value.time <= 86400 &&
-			(value.weekday == undefined || (value.weekday >=0 && value.weekday < 7)) &&
+		(value.time >= 0 && value.time < SI_TIME_CUTOFF * 2 &&
+			(value.weekday == undefined || (value.weekday >=0 && value.weekday <= 7)) &&
 			(value.weekcounter == undefined || (value.weekcounter >=0 && value.weekcounter < 4))
 		)
 	}
@@ -382,7 +382,7 @@ export class SiTime extends storage.SiDataType<SiTimestamp> implements storage.I
 		if (timeInt === proto.NO_TIME) {
 			return null;
 		}
-		if (timeInt === undefined || timeInt > 86400) {
+		if (timeInt === undefined || timeInt >= (this.intFieldAmPm !== undefined ? SI_TIME_CUTOFF : SI_TIME_CUTOFF * 2)) {
 			return undefined;
 		}
 		
