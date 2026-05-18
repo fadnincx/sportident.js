@@ -52,10 +52,10 @@ describe('TCard', () => {
 	});
 	test('getPunchOffset', () => {
 		expect(getPunchOffset(0)).toEqual(0x38);
-		expect(getPunchOffset(1)).toEqual(0x3C);
-		expect(getPunchOffset(8)).toEqual(0x58);
+		expect(getPunchOffset(1)).toEqual(0x40);
+		expect(getPunchOffset(8)).toEqual(0x78);
 		expect(getPunchOffset(9)).toEqual(0x80);
-		expect(getPunchOffset(10)).toEqual(0x84);
+		expect(getPunchOffset(10)).toEqual(0x88);
 	});
 	const examples = getTCardExamples();
 	Object.keys(examples).forEach((exampleName) => {

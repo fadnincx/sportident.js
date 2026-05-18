@@ -1,9 +1,10 @@
 import * as storage from '../../storage';
 import * as siProtocol from '../../siProtocol';
 import * as utils from '../../utils';
-import { cropPunches, getCroppedString, ModernSiCard, ModernSiCardSeries, cardSeriesStorageLocation } from './ModernSiCard';
+import { getCroppedString, ModernSiCard, ModernSiCardSeries, cardSeriesStorageLocation } from './ModernSiCard';
 import type { IBaseSiCardStorageFields } from '../ISiCard';
 import { BaseSiCard } from '../BaseSiCard';
+import type { IPunch } from '../IRaceResultData';
 
 const logger = utils.getLogger('TCard');
 
@@ -14,13 +15,34 @@ const bytesPerPage = 128;
 const MAX_NUM_PUNCHES = 25;
 const PUNCHES_IN_BLOCK0 = 9;
 
-// Block 0 punches start at 0x38 with 4-byte stride (9 punches fit in 0x38-0x5B)
-// Block 1 punches start at 0x80 (page 1 offset) with 4-byte stride
+// TCard control punch format (8 bytes per punch, different from HTAG 4-byte format):
+//   byte[0] = Code number (8-bit, 0-255)
+//   byte[1] = Station serial high
+//   byte[2] = Station serial mid
+//   byte[3] = Station serial low 2 bits (7-6) | Year 4 bits (5-2) | Month high 2 bits (1-0)
+//   byte[4] = Month low 2 bits (7-6) | Day 5 bits (5-1) | AM/PM flag (bit 0)
+//   byte[5] = Time high byte (TH)
+//   byte[6] = Time low byte (TL)
+//   byte[7] = Subsecond (1/256 s)
+
 export const getPunchOffset = (i: number): number => {
 	if (i < PUNCHES_IN_BLOCK0) {
-		return 0x38 + i * 4;
+		return 0x38 + i * 8;
 	}
-	return bytesPerPage + (i - PUNCHES_IN_BLOCK0) * 4;
+	return bytesPerPage + (i - PUNCHES_IN_BLOCK0) * 8;
+};
+
+interface PotentialTCardPunch {
+	code: number | undefined;
+	time: siProtocol.SiTimestamp | undefined;
+}
+
+const cropPunches = (allPunches: (PotentialTCardPunch | undefined)[]): IPunch[] => {
+	const isPunchEntryValid = (punch: PotentialTCardPunch | undefined): punch is IPunch =>
+		punch !== undefined && punch.code !== undefined && punch.code !== 0x00 && punch.time !== undefined && punch.time !== null;
+	const firstInvalidIndex = allPunches.findIndex((punch) => !isPunchEntryValid(punch));
+	const punchesUntilInvalid = firstInvalidIndex === -1 ? allPunches : allPunches.slice(0, firstInvalidIndex);
+	return punchesUntilInvalid.filter<IPunch>(isPunchEntryValid);
 };
 
 const parseCardHolderString = (
@@ -54,22 +76,26 @@ export const tCardStorageLocations: storage.ISiStorageLocations<ITCardStorageFie
 		),
 		(extractedValue) => siProtocol.arr2cardNumber(extractedValue),
 	),
+	// Start/finish/check times use standard 4-byte HTAG format [PTD, CN, TH, TL]
 	startTime: new siProtocol.SiTime([[0x0F], [0x0E], [0x0C]]),
 	finishTime: new siProtocol.SiTime([[0x13], [0x12], [0x10]]),
 	checkTime: new siProtocol.SiTime([[0x0B], [0x0A], [0x08]]),
 	punchCount: new storage.SiInt([[0x16]]),
+	// TCard control punches use 8-byte format (NOT the standard 4-byte HTAG format):
+	//   offset+0 = code number (8-bit)
+	//   offset+4 = AM/PM at bit 0
+	//   offset+5 = time high, offset+6 = time low
 	punches: new storage.SiModified(
 		new storage.SiArray(
 			MAX_NUM_PUNCHES,
 			(i) => new storage.SiDict({
 				code: new storage.SiInt([
-					[getPunchOffset(i) + 1],
-					[getPunchOffset(i) + 0, 7, 8],
+					[getPunchOffset(i) + 0],
 				]),
 				time: new siProtocol.SiTime([
-					[getPunchOffset(i) + 3],
-					[getPunchOffset(i) + 2],
-					[getPunchOffset(i) + 0],
+					[getPunchOffset(i) + 6],
+					[getPunchOffset(i) + 5],
+					[getPunchOffset(i) + 4],
 				]),
 			}),
 		),
