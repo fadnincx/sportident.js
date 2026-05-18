@@ -5,3 +5,6 @@ export { FakeSiCard9 } from './FakeSiCard9';
 export { FakeSiCard10 } from './FakeSiCard10';
 export { FakeSiCard11 } from './FakeSiCard11';
 export { FakeSIAC } from './FakeSIAC';
+export { FakePCard } from './FakePCard';
+export { FakeTCard } from './FakeTCard';
+export { FakeFCard } from './FakeFCard';
