@@ -113,6 +113,11 @@ export class FakeSiMainStation {
 				command: proto.cmd.ERASE_BDATA,
 				parameters: [...this.getCode()]
 			});
+		} else if (message.command === proto.cmd.SET_BAUD) {
+			this.dispatchMessage({
+				command: proto.cmd.SET_BAUD,
+				parameters: [...this.getCode(), message.parameters[0]]
+			});
 		}
 	}
 }

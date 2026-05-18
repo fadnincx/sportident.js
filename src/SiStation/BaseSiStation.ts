@@ -252,4 +252,26 @@ export abstract class BaseSiStation<T extends SiTargetMultiplexerTarget> {
 			0
 		);
 	}
+
+	eraseBackupData(): Promise<void> {
+		return this.sendMessage(
+			{
+				command: proto.cmd.ERASE_BDATA,
+				parameters: []
+			},
+			1
+		).then(() => undefined);
+	}
+
+	setBaudRate(baudRate: number): Promise<void> {
+		// DLL: baudRate >= 38400 -> parameter 0x00, else 0x01
+		const param = baudRate >= 38400 ? 0x00 : 0x01;
+		return this.sendMessage(
+			{
+				command: proto.cmd.SET_BAUD,
+				parameters: [param]
+			},
+			1
+		).then(() => undefined);
+	}
 }
