@@ -253,6 +253,136 @@ export abstract class BaseSiStation<T extends SiTargetMultiplexerTarget> {
 		);
 	}
 
+	// --- Card Write Operations ---
+
+	/** Write a 4-byte word to a SIAC/Card11 card at the given address.
+	 *  DLL: SetSiacCardData / _cmdSetSiacData
+	 *  Protocol: command 0xEA (WRITE_CARDX_WORD), payload [address, d0, d1, d2, d3]
+	 *  Supported addresses: 0x06, 0x2B, 0x6C, 0x6F, 0x73, 0x75, 0x7E */
+	setSiacCardData(address: number, data: number[]): Promise<void> {
+		const VALID_ADDRESSES = [0x06, 0x2B, 0x6C, 0x6F, 0x73, 0x75, 0x7E];
+		if (!VALID_ADDRESSES.includes(address)) {
+			return Promise.reject(new Error(`Address 0x${address.toString(16)} not supported for SIAC card data`));
+		}
+		if (data.length !== 4) {
+			return Promise.reject(new Error('Data must be exactly 4 bytes'));
+		}
+		return this.sendMessage(
+			{
+				command: proto.cmd.SET_SI8,
+				parameters: [address, ...data]
+			},
+			1
+		).then(() => undefined);
+	}
+
+	/** Set the feedback signal on a Card11 or SIAC card.
+	 *  DLL: _getFeedbackSignalSetting + SetSiacCardData at address 0x73 */
+	setCardFeedbackSignal(feedbackSignal: 'default' | 'short' | 'long' | 'blinkOnly', cardType: 'Card11' | 'SIAC'): Promise<void> {
+		const FEEDBACK_SIAC: { [key: string]: number[] } = {
+			short:    [0x06, 0x00, 0x05, 0x4A],
+			long:     [0x30, 0x00, 0x05, 0x4A],
+			default:  [0x18, 0x00, 0x05, 0x4A],
+			blinkOnly:[0x20, 0x00, 0x66, 0x00],
+		};
+		const FEEDBACK_CARD11: { [key: string]: number[] } = {
+			short:   [0x10, 0x00, 0x09, 0x00],
+			long:    [0x40, 0x00, 0x09, 0x00],
+			default: [0x20, 0x00, 0x09, 0x00],
+		};
+		const feedbackMap = cardType === 'Card11' ? FEEDBACK_CARD11 : FEEDBACK_SIAC;
+		const feedbackBytes = feedbackMap[feedbackSignal] || feedbackMap['default'];
+		return this.setSiacCardData(0x73, feedbackBytes);
+	}
+
+	/** Write personal data to a modern SI card (Card8/9/10/11/SIAC/PCard/TCard).
+	 *  DLL: _cmdSetCardPersonalDataAndFeedbackSignal (modern card path)
+	 *  Data is semicolon-delimited: "FirstName;LastName;Sex;Birthday;Club;Email;Phone;City;Street;Zip;Country;"
+	 *  Written as 4-byte words starting at word address 8, padded with 0xEE. */
+	writeModernCardPersonalData(personalDataString: string): Promise<void> {
+		const rawBytes = Array.from(personalDataString, (c) => c.charCodeAt(0) & 0xFF);
+		const paddedLen = Math.max(4, Math.ceil(rawBytes.length / 4) * 4);
+		const padded = new Array(paddedLen).fill(0xEE);
+		for (let i = 0; i < Math.min(rawBytes.length, paddedLen); i++) {
+			padded[i] = rawBytes[i];
+		}
+
+		let wordAddr = 8;
+		let promise = Promise.resolve();
+		for (let offset = 0; offset < padded.length; offset += 4) {
+			const word = [padded[offset], padded[offset + 1], padded[offset + 2], padded[offset + 3]];
+			const addr = wordAddr++;
+			promise = promise.then(() =>
+				this.sendMessage(
+					{
+						command: proto.cmd.SET_SI8,
+						parameters: [addr, ...word]
+					},
+					1
+				).then(() => undefined)
+			);
+		}
+		return promise;
+	}
+
+	/** Write personal data to a SI-Card 6 using fixed-width fields.
+	 *  DLL: _cmdSetCardPersonalDataAndFeedbackSignal (Card6 path)
+	 *  Uses SET_SI6 (0xE2) for 16-byte pages and SET_SI6_SPECIAL (0xE4) for 4-byte words. */
+	writeCard6PersonalData(fields: {
+		lastName?: string; firstName?: string; country?: string; club?: string;
+		phone?: string; email?: string; street?: string; city?: string;
+		zip?: string; sex?: string; birthday?: string;
+	}): Promise<void> {
+		const padField = (text: string | undefined, length: number): number[] => {
+			const buf = new Array(length).fill(0x20);
+			if (text) {
+				for (let i = 0; i < Math.min(text.length, length); i++) {
+					buf[i] = text.charCodeAt(i) & 0xFF;
+				}
+			}
+			return buf;
+		};
+
+		const lastName = padField(fields.lastName, 20);
+		const firstName = padField(fields.firstName, 20);
+		const country = padField(fields.country, 4);
+		const club = padField(fields.club, 36);
+		const phone = padField(fields.phone, 16);
+		const email = padField(fields.email, 36);
+		const street = padField(fields.street, 20);
+		const city = padField(fields.city, 16);
+		const zip = padField(fields.zip, 8);
+		const sex = padField(fields.sex ? fields.sex.substring(0, 1).padStart(4, '0') : '0000', 4);
+		const birthday = padField(fields.birthday, 8);
+
+		// Build page writes: SET_SI6 (0xE2) sends [blockNum, pageNum, ...16 bytes]
+		const pages: { command: number; parameters: number[] }[] = [
+			{ command: proto.cmd.SET_SI6, parameters: [0x00, 0x03, ...lastName.slice(0, 16)] },
+			{ command: proto.cmd.SET_SI6, parameters: [0x00, 0x04, ...lastName.slice(16, 20), ...firstName.slice(0, 12)] },
+			{ command: proto.cmd.SET_SI6, parameters: [0x00, 0x05, ...firstName.slice(12, 20), ...country.slice(0, 4), ...club.slice(0, 4)] },
+			{ command: proto.cmd.SET_SI6, parameters: [0x00, 0x06, ...club.slice(4, 20)] },
+			{ command: proto.cmd.SET_SI6, parameters: [0x00, 0x07, ...club.slice(20, 36)] },
+			{ command: proto.cmd.SET_SI6, parameters: [0x01, 0x01, ...phone.slice(0, 16)] },
+			{ command: proto.cmd.SET_SI6, parameters: [0x01, 0x02, ...email.slice(0, 16)] },
+			{ command: proto.cmd.SET_SI6, parameters: [0x01, 0x03, ...email.slice(16, 32)] },
+			{ command: proto.cmd.SET_SI6, parameters: [0x01, 0x04, ...email.slice(32, 36), ...street.slice(0, 12)] },
+			{ command: proto.cmd.SET_SI6, parameters: [0x01, 0x05, ...street.slice(12, 20), ...city.slice(0, 8)] },
+			{ command: proto.cmd.SET_SI6, parameters: [0x01, 0x06, ...city.slice(8, 16), ...zip.slice(0, 8)] },
+			// SET_SI6_SPECIAL (0xE4) for 4-byte words in block 1 page 7
+			{ command: proto.cmd.SET_SI6_SPECIAL, parameters: [0x01, 0x07, ...sex.slice(0, 4)] },
+			{ command: proto.cmd.SET_SI6_SPECIAL, parameters: [0x01, 0x07, 0x01, ...birthday.slice(0, 4)] },
+			{ command: proto.cmd.SET_SI6_SPECIAL, parameters: [0x01, 0x07, 0x02, ...birthday.slice(4, 8)] },
+		];
+
+		let promise = Promise.resolve();
+		for (const page of pages) {
+			promise = promise.then(() =>
+				this.sendMessage(page, 1).then(() => undefined)
+			);
+		}
+		return promise;
+	}
+
 	eraseBackupData(): Promise<void> {
 		return this.sendMessage(
 			{

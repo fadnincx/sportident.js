@@ -217,4 +217,164 @@ describe('SiStation', () => {
 		await testUtils.nTimesAsync(1, () => testUtils.advanceTimersByTime(0));
 		expect(timeState).toEqual({ powerOffSucceeded: true });
 	});
+	test('eraseBackupData', async () => {
+		const sentMessages: { command: number; parameters: number[] }[] = [];
+		const mySiStation = new MySiStation(
+			{
+				sendMessage: (_target: SiTargetMultiplexerTarget, message: siProtocol.SiMessage) => {
+					if (message.mode === undefined) {
+						sentMessages.push({ command: message.command, parameters: message.parameters });
+					}
+					return Promise.resolve([[0x00, 0x00]]);
+				}
+			} as unknown as ISiTargetMultiplexer,
+			SiTargetMultiplexerTarget.Direct
+		);
+		await mySiStation.eraseBackupData();
+		expect(sentMessages).toEqual([{ command: proto.cmd.ERASE_BDATA, parameters: [] }]);
+	});
+	test('setBaudRate', async () => {
+		const sentMessages: { command: number; parameters: number[] }[] = [];
+		const mySiStation = new MySiStation(
+			{
+				sendMessage: (_target: SiTargetMultiplexerTarget, message: siProtocol.SiMessage) => {
+					if (message.mode === undefined) {
+						sentMessages.push({ command: message.command, parameters: message.parameters });
+					}
+					return Promise.resolve([[0x00, 0x00, 0x00]]);
+				}
+			} as unknown as ISiTargetMultiplexer,
+			SiTargetMultiplexerTarget.Direct
+		);
+		await mySiStation.setBaudRate(38400);
+		await mySiStation.setBaudRate(4800);
+		expect(sentMessages).toEqual([
+			{ command: proto.cmd.SET_BAUD, parameters: [0x00] },
+			{ command: proto.cmd.SET_BAUD, parameters: [0x01] },
+		]);
+	});
+	test('setSiacCardData', async () => {
+		const sentMessages: { command: number; parameters: number[] }[] = [];
+		const mySiStation = new MySiStation(
+			{
+				sendMessage: (_target: SiTargetMultiplexerTarget, message: siProtocol.SiMessage) => {
+					if (message.mode === undefined) {
+						sentMessages.push({ command: message.command, parameters: message.parameters });
+					}
+					return Promise.resolve([[0x00, 0x00, 0x73]]);
+				}
+			} as unknown as ISiTargetMultiplexer,
+			SiTargetMultiplexerTarget.Direct
+		);
+		await mySiStation.setSiacCardData(0x73, [0x18, 0x00, 0x05, 0x4A]);
+		expect(sentMessages).toEqual([
+			{ command: proto.cmd.SET_SI8, parameters: [0x73, 0x18, 0x00, 0x05, 0x4A] },
+		]);
+	});
+	test('setSiacCardData rejects invalid address', async () => {
+		const mySiStation = new MySiStation(
+			{ sendMessage: () => Promise.resolve([[0x00]]) } as unknown as ISiTargetMultiplexer,
+			SiTargetMultiplexerTarget.Direct
+		);
+		await expect(mySiStation.setSiacCardData(0x99, [0x00, 0x00, 0x00, 0x00])).rejects.toThrow('not supported');
+	});
+	test('setSiacCardData rejects wrong data length', async () => {
+		const mySiStation = new MySiStation(
+			{ sendMessage: () => Promise.resolve([[0x00]]) } as unknown as ISiTargetMultiplexer,
+			SiTargetMultiplexerTarget.Direct
+		);
+		await expect(mySiStation.setSiacCardData(0x73, [0x00, 0x00])).rejects.toThrow('4 bytes');
+	});
+	test('setCardFeedbackSignal sends correct bytes for SIAC', async () => {
+		const sentMessages: { command: number; parameters: number[] }[] = [];
+		const mySiStation = new MySiStation(
+			{
+				sendMessage: (_target: SiTargetMultiplexerTarget, message: siProtocol.SiMessage) => {
+					if (message.mode === undefined) {
+						sentMessages.push({ command: message.command, parameters: message.parameters });
+					}
+					return Promise.resolve([[0x00, 0x00, 0x73]]);
+				}
+			} as unknown as ISiTargetMultiplexer,
+			SiTargetMultiplexerTarget.Direct
+		);
+		await mySiStation.setCardFeedbackSignal('short', 'SIAC');
+		await mySiStation.setCardFeedbackSignal('long', 'SIAC');
+		await mySiStation.setCardFeedbackSignal('default', 'SIAC');
+		await mySiStation.setCardFeedbackSignal('blinkOnly', 'SIAC');
+		expect(sentMessages).toEqual([
+			{ command: proto.cmd.SET_SI8, parameters: [0x73, 0x06, 0x00, 0x05, 0x4A] },
+			{ command: proto.cmd.SET_SI8, parameters: [0x73, 0x30, 0x00, 0x05, 0x4A] },
+			{ command: proto.cmd.SET_SI8, parameters: [0x73, 0x18, 0x00, 0x05, 0x4A] },
+			{ command: proto.cmd.SET_SI8, parameters: [0x73, 0x20, 0x00, 0x66, 0x00] },
+		]);
+	});
+	test('setCardFeedbackSignal sends correct bytes for Card11', async () => {
+		const sentMessages: { command: number; parameters: number[] }[] = [];
+		const mySiStation = new MySiStation(
+			{
+				sendMessage: (_target: SiTargetMultiplexerTarget, message: siProtocol.SiMessage) => {
+					if (message.mode === undefined) {
+						sentMessages.push({ command: message.command, parameters: message.parameters });
+					}
+					return Promise.resolve([[0x00, 0x00, 0x73]]);
+				}
+			} as unknown as ISiTargetMultiplexer,
+			SiTargetMultiplexerTarget.Direct
+		);
+		await mySiStation.setCardFeedbackSignal('short', 'Card11');
+		await mySiStation.setCardFeedbackSignal('long', 'Card11');
+		await mySiStation.setCardFeedbackSignal('default', 'Card11');
+		expect(sentMessages).toEqual([
+			{ command: proto.cmd.SET_SI8, parameters: [0x73, 0x10, 0x00, 0x09, 0x00] },
+			{ command: proto.cmd.SET_SI8, parameters: [0x73, 0x40, 0x00, 0x09, 0x00] },
+			{ command: proto.cmd.SET_SI8, parameters: [0x73, 0x20, 0x00, 0x09, 0x00] },
+		]);
+	});
+	test('writeModernCardPersonalData sends 4-byte words at address 8+', async () => {
+		const sentMessages: { command: number; parameters: number[] }[] = [];
+		const mySiStation = new MySiStation(
+			{
+				sendMessage: (_target: SiTargetMultiplexerTarget, message: siProtocol.SiMessage) => {
+					if (message.mode === undefined) {
+						sentMessages.push({ command: message.command, parameters: message.parameters });
+					}
+					return Promise.resolve([[0x00, 0x00, message.mode === undefined ? message.parameters[0] : 0]]);
+				}
+			} as unknown as ISiTargetMultiplexer,
+			SiTargetMultiplexerTarget.Direct
+		);
+		// "ab;" = 3 bytes, padded to 4 with 0xEE
+		await mySiStation.writeModernCardPersonalData('ab;');
+		expect(sentMessages).toEqual([
+			{ command: proto.cmd.SET_SI8, parameters: [8, 0x61, 0x62, 0x3B, 0xEE] },
+		]);
+	});
+	test('writeCard6PersonalData sends correct page writes', async () => {
+		const sentMessages: { command: number; parameters: number[] }[] = [];
+		const mySiStation = new MySiStation(
+			{
+				sendMessage: (_target: SiTargetMultiplexerTarget, message: siProtocol.SiMessage) => {
+					if (message.mode === undefined) {
+						sentMessages.push({ command: message.command, parameters: message.parameters });
+					}
+					return Promise.resolve([[0x00, 0x00, 0x00]]);
+				}
+			} as unknown as ISiTargetMultiplexer,
+			SiTargetMultiplexerTarget.Direct
+		);
+		await mySiStation.writeCard6PersonalData({ lastName: 'B', firstName: 'A' });
+		// Should send 14 commands total: 11 SET_SI6 + 3 SET_SI6_SPECIAL
+		expect(sentMessages.length).toBe(14);
+		// First page: block 0, page 3, lastName padded
+		expect(sentMessages[0].command).toBe(proto.cmd.SET_SI6);
+		expect(sentMessages[0].parameters[0]).toBe(0x00); // block
+		expect(sentMessages[0].parameters[1]).toBe(0x03); // page
+		expect(sentMessages[0].parameters[2]).toBe(0x42); // 'B'
+		expect(sentMessages[0].parameters[3]).toBe(0x20); // space padding
+		// Last 3 commands use SET_SI6_SPECIAL
+		expect(sentMessages[11].command).toBe(proto.cmd.SET_SI6_SPECIAL);
+		expect(sentMessages[12].command).toBe(proto.cmd.SET_SI6_SPECIAL);
+		expect(sentMessages[13].command).toBe(proto.cmd.SET_SI6_SPECIAL);
+	});
 });

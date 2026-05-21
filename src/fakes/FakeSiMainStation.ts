@@ -118,6 +118,24 @@ export class FakeSiMainStation {
 				command: proto.cmd.SET_BAUD,
 				parameters: [...this.getCode(), message.parameters[0]]
 			});
+		} else if (message.command === proto.cmd.SET_SI8) {
+			// WRITE_CARDX_WORD: echo back the address byte
+			this.dispatchMessage({
+				command: proto.cmd.SET_SI8,
+				parameters: [...this.getCode(), message.parameters[0]]
+			});
+		} else if (message.command === proto.cmd.SET_SI6) {
+			// SET_SI6: echo back block and page
+			this.dispatchMessage({
+				command: proto.cmd.SET_SI6,
+				parameters: [...this.getCode(), message.parameters[0], message.parameters[1]]
+			});
+		} else if (message.command === proto.cmd.SET_SI6_SPECIAL) {
+			// SET_SI6_SPECIAL: echo back block and page
+			this.dispatchMessage({
+				command: proto.cmd.SET_SI6_SPECIAL,
+				parameters: [...this.getCode(), message.parameters[0], message.parameters[1]]
+			});
 		}
 	}
 }
