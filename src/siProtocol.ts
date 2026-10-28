@@ -75,7 +75,7 @@ export const arr2cardNumber = (arr: (number | undefined)[]): number | undefined 
 	const fourthSet = arr.length === 4 && arr[3]! !== 0x00;
 	if (fourthSet || 4 < arr[2]!) {
 		cardnum |= arr[2]! << 16;
-	} else if (arr[2]! > 1){
+	} else if (arr[2]! > 1) {
 		cardnum += arr[2]! * 100000;
 	}
 	if (arr.length === 4) {
@@ -219,7 +219,7 @@ export interface SiMessagesParseResult {
 
 export const parseAll = (inputData: number[]): SiMessagesParseResult => {
 	let currentRemainder = inputData;
-	const messages:SiMessage[] = [];
+	const messages: SiMessage[] = [];
 	let remainderWasShrinking = true;
 	while (remainderWasShrinking) {
 		const { message, remainder: newRemainder } = parse(currentRemainder);
@@ -302,9 +302,10 @@ export class SiDate extends storage.SiDataType<Date> implements storage.ISiDataT
 }
 
 export type SiTimestamp = {
-	time:number,
-	weekday?:number,
-	weekcounter?:number,
+	time: number,
+	weekday?: number,
+	weekcounter?: number,
+	milliseconds?: number,
 } | null;
 
 export class SiTime extends storage.SiDataType<SiTimestamp> implements storage.ISiDataType<SiTimestamp> {
@@ -315,23 +316,23 @@ export class SiTime extends storage.SiDataType<SiTimestamp> implements storage.I
 
 	constructor(public byteStorage: [[number], [number], [number]] | [[number], [number]] | undefined) {
 		super();
-		if (byteStorage == undefined){
+		if (byteStorage == undefined) {
 			this.intFieldTime12 = undefined
 			this.intFieldAmPm = undefined
 			this.intFieldDayOfWeek = undefined
 			this.intFieldWeekCounter = undefined
-		}else if (byteStorage.length == 3){
-			this.intFieldTime12 = new storage.SiInt([byteStorage[0],byteStorage[1]])
-			this.intFieldAmPm = new storage.SiInt(byteStorage[2].map((b:number):SiIntegerPartDefinition=>{
-				return [b,0,1] // offset, startbit, endbit
+		} else if (byteStorage.length == 3) {
+			this.intFieldTime12 = new storage.SiInt([byteStorage[0], byteStorage[1]])
+			this.intFieldAmPm = new storage.SiInt(byteStorage[2].map((b: number): SiIntegerPartDefinition => {
+				return [b, 0, 1] // offset, startbit, endbit
 			}))
-			this.intFieldDayOfWeek = new storage.SiInt(byteStorage[2].map((b:number):SiIntegerPartDefinition=>{
-				return [b,1,4] // offset, startbit, endbit
+			this.intFieldDayOfWeek = new storage.SiInt(byteStorage[2].map((b: number): SiIntegerPartDefinition => {
+				return [b, 1, 4] // offset, startbit, endbit
 			}))
-			this.intFieldWeekCounter = new storage.SiInt(byteStorage[2].map((b:number):SiIntegerPartDefinition=>{
-				return [b,4,6] // offset, startbit, endbit
+			this.intFieldWeekCounter = new storage.SiInt(byteStorage[2].map((b: number): SiIntegerPartDefinition => {
+				return [b, 4, 6] // offset, startbit, endbit
 			}))
-		}else if (byteStorage.length == 2){
+		} else if (byteStorage.length == 2) {
 			this.intFieldTime12 = new storage.SiInt(byteStorage)
 			this.intFieldAmPm = undefined
 			this.intFieldDayOfWeek = undefined
@@ -340,11 +341,11 @@ export class SiTime extends storage.SiDataType<SiTimestamp> implements storage.I
 	}
 
 	typeSpecificIsValueValid(value: SiTimestamp): boolean {
-		return value === null || 
-		(value.time >= 0 && value.time < SI_TIME_CUTOFF * 2 &&
-			(value.weekday == undefined || (value.weekday >=0 && value.weekday <= 7)) &&
-			(value.weekcounter == undefined || (value.weekcounter >=0 && value.weekcounter < 4))
-		)
+		return value === null ||
+			(value.time >= 0 && value.time < SI_TIME_CUTOFF * 2 &&
+				(value.weekday == undefined || (value.weekday >= 0 && value.weekday <= 7)) &&
+				(value.weekcounter == undefined || (value.weekcounter >= 0 && value.weekcounter < 4))
+			)
 	}
 
 	typeSpecificValueToString(value: SiTimestamp): string {
@@ -352,7 +353,7 @@ export class SiTime extends storage.SiDataType<SiTimestamp> implements storage.I
 			return 'NO_TIME';
 		}
 		const hours = Math.floor(value.time / 3600)
-		const minutes = Math.floor(value.time/60)%60
+		const minutes = Math.floor(value.time / 60) % 60
 		const seconds = value.time % 60
 		const hoursStr = `${hours}`.padStart(2, '0');
 		const minutesStr = `${minutes}`.padStart(2, '0');
@@ -368,9 +369,9 @@ export class SiTime extends storage.SiDataType<SiTimestamp> implements storage.I
 		if (!res) {
 			return new storage.ValueFromStringError(`Not a correctly formatted date: ${string}`);
 		}
-		
+
 		return {
-			time: Number(res[1]) * 3600 + Number(res[2]) * 60 + Number(res[3]), 
+			time: Number(res[1]) * 3600 + Number(res[2]) * 60 + Number(res[3]),
 		};
 	}
 
@@ -385,16 +386,16 @@ export class SiTime extends storage.SiDataType<SiTimestamp> implements storage.I
 		if (timeInt === undefined || timeInt >= (this.intFieldAmPm !== undefined ? SI_TIME_CUTOFF : SI_TIME_CUTOFF * 2)) {
 			return undefined;
 		}
-		
-		const amPm = this.intFieldAmPm === undefined?undefined:this.intFieldAmPm.typeSpecificExtractFromData(data)
-		const weekcounter = this.intFieldWeekCounter === undefined?undefined:this.intFieldWeekCounter.typeSpecificExtractFromData(data)
-		const weekday = this.intFieldDayOfWeek === undefined?undefined:this.intFieldDayOfWeek.typeSpecificExtractFromData(data)
 
-		if (amPm != undefined && amPm == 1){
+		const amPm = this.intFieldAmPm === undefined ? undefined : this.intFieldAmPm.typeSpecificExtractFromData(data)
+		const weekcounter = this.intFieldWeekCounter === undefined ? undefined : this.intFieldWeekCounter.typeSpecificExtractFromData(data)
+		const weekday = this.intFieldDayOfWeek === undefined ? undefined : this.intFieldDayOfWeek.typeSpecificExtractFromData(data)
+
+		if (amPm != undefined && amPm == 1) {
 			timeInt += 43200;
 		}
 
-		return {time: timeInt, weekcounter: weekcounter, weekday: weekday}
+		return { time: timeInt, weekcounter: weekcounter, weekday: weekday }
 	}
 
 	typeSpecificUpdateData(data: storage.ISiStorageData, newValue: SiTimestamp): storage.ISiStorageData {
@@ -411,7 +412,7 @@ export class SiTime extends storage.SiDataType<SiTimestamp> implements storage.I
 		}
 		let tempData = this.intFieldTime12.typeSpecificUpdateData(data, newIntValue);
 		if (this.intFieldAmPm !== undefined && newValue != null) {
-			tempData = this.intFieldAmPm.typeSpecificUpdateData(tempData, newValue.time >= 43200?1:0)
+			tempData = this.intFieldAmPm.typeSpecificUpdateData(tempData, newValue.time >= 43200 ? 1 : 0)
 		}
 		if (this.intFieldDayOfWeek !== undefined && newValue != null && newValue.weekday !== undefined) {
 			tempData = this.intFieldDayOfWeek.typeSpecificUpdateData(tempData, newValue.weekday)

@@ -12,8 +12,9 @@ export interface IOrderedRaceResult {
 	finishTimeIndex?: number | null;
 }
 
-export interface IOrderedPunch {
-	code: number;
+// Extends IPunch minus time, so card-specific fields survive the round trip through
+// getOrderedRaceResult and getRaceResultFromOrdered.
+export interface IOrderedPunch extends Omit<IPunch, 'time'> {
 	timeIndex: number | null;
 }
 
@@ -59,15 +60,17 @@ export const getOrderedRaceResult = (result: IRaceResultData): IOrderedRaceResul
 	if (result.punches !== undefined) {
 		const newPunches: IOrderedPunch[] = [];
 		result.punches.forEach((punch: IPunch) => {
+			// eslint-disable-next-line @typescript-eslint/no-unused-vars
+			const { time, ...punchWithoutTime } = punch;
 			if (punch.time !== null) {
 				newPunches.push({
-					code: punch.code,
+					...punchWithoutTime,
 					timeIndex: orderedResult.orderedTimes.length
 				});
 				orderedResult.orderedTimes.push(punch.time);
 			} else {
 				newPunches.push({
-					code: punch.code,
+					...punchWithoutTime,
 					timeIndex: null
 				});
 			}
@@ -94,10 +97,14 @@ export const getRaceResultFromOrdered = (orderedResult: IOrderedRaceResult): IRa
 		punches:
 			orderedResult.punches === undefined
 				? undefined
-				: orderedResult.punches.map((punch: IOrderedPunch) => ({
-						code: punch.code,
-						time: getOrderedTimeIndexIfSet(punch.timeIndex)
-				}))
+				: orderedResult.punches.map((punch: IOrderedPunch) => {
+						// eslint-disable-next-line @typescript-eslint/no-unused-vars
+						const { timeIndex, ...punchWithoutTimeIndex } = punch;
+						return {
+							...punchWithoutTimeIndex,
+							time: getOrderedTimeIndexIfSet(punch.timeIndex)
+						};
+				})
 	};
 };
 

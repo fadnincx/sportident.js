@@ -37,6 +37,15 @@ const jestConfig: Config = {
         },
         './src/SiCard': percentCoverage(92),
         './src/SiDevice': percentCoverage(44),
+        // Jest counts a file against EVERY matching threshold group, so these files are
+        // also measured against './src/' below; keep branches at or above its 92.
+        './src/SiReaderBt': {
+            branches: 92,
+            functions: 90,
+            lines: 90,
+            statements: 90,
+        },
+        './src/SiReaderBt/readerBtProtocol.ts': totalCoverage,
         './src/fakes': percentCoverage(43),
         './src/SiStation': percentCoverage(83),
         './src/storage': totalCoverage,

@@ -5,6 +5,7 @@ import * as siCardExports from './SiCard';
 import * as siDeviceExports from './SiDevice';
 import * as fakesExports from './fakes';
 import * as siStationExports from './SiStation';
+import * as siReaderBtExports from './SiReaderBt';
 import * as storageExports from './storage';
 import * as constants from './constants';
 import * as siProtocol from './siProtocol';
@@ -15,6 +16,7 @@ export const si = {
 	...siDeviceExports,
 	...fakesExports,
 	...siStationExports,
+	...siReaderBtExports,
 	...storageExports,
 	constants: constants,
 	protocol: siProtocol,

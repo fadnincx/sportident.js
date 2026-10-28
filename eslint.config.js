@@ -73,6 +73,22 @@ export default [
                 USBEndpoint: 'readonly',
                 USBConnectionEvent: 'readonly',
                 USB: 'readonly',
+                Bluetooth: 'readonly',
+                BluetoothDevice: 'readonly',
+                BluetoothRemoteGATTServer: 'readonly',
+                BluetoothRemoteGATTService: 'readonly',
+                BluetoothRemoteGATTCharacteristic: 'readonly',
+                BluetoothServiceUUID: 'readonly',
+                RequestDeviceOptions: 'readonly',
+                EventListener: 'readonly',
+                Navigator: 'readonly',
+                navigator: 'readonly',
+                // Pre-existing gap: WebUsbSiDeviceDriver.test.ts referenced these without
+                // declaring them, so `npm run lint` was already failing before Reader BT.
+                USBInTransferResult: 'readonly',
+                USBOutTransferResult: 'readonly',
+                USBIsochronousInTransferResult: 'readonly',
+                USBIsochronousOutTransferResult: 'readonly',
             },
         },
         plugins: {

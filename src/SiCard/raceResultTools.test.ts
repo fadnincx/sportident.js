@@ -231,6 +231,61 @@ describe('raceResultTools', () => {
 		});
 	});
 
+	describe('punch field preservation', () => {
+		const ENRICHED_RACE_RESULT: IRaceResultData = {
+			startTime: { time: 100 },
+			punches: [
+				{ code: 31, time: { time: 200 }, punchType: 7, controlInfo: 0x80, beaconMode: false, radioMode: 2 },
+				{ code: 32, time: null, punchType: 7, controlInfo: 0x00, beaconMode: false, radioMode: 0 }
+			],
+			finishTime: { time: 300 }
+		};
+
+		test('getOrderedRaceResult keeps card-specific punch fields', async () => {
+			const ordered = getOrderedRaceResult(ENRICHED_RACE_RESULT);
+			expect(ordered.punches).toEqual([
+				{ code: 31, timeIndex: 1, punchType: 7, controlInfo: 0x80, beaconMode: false, radioMode: 2 },
+				{ code: 32, timeIndex: null, punchType: 7, controlInfo: 0x00, beaconMode: false, radioMode: 0 }
+			]);
+		});
+
+		test('survives a getOrderedRaceResult/getRaceResultFromOrdered round trip', async () => {
+			const roundTripped = getRaceResultFromOrdered(getOrderedRaceResult(ENRICHED_RACE_RESULT));
+			expect(roundTripped.punches).toEqual(ENRICHED_RACE_RESULT.punches);
+		});
+
+		test('survives monotonizeRaceResult', async () => {
+			const monotonized = monotonizeRaceResult(ENRICHED_RACE_RESULT);
+			expect(monotonized.punches![0]).toEqual({
+				code: 31,
+				time: { time: 200 },
+				punchType: 7,
+				controlInfo: 0x80,
+				beaconMode: false,
+				radioMode: 2
+			});
+		});
+
+		test('survives makeStartZeroTime', async () => {
+			const zeroed = makeStartZeroTime(ENRICHED_RACE_RESULT);
+			expect(zeroed.punches![0]).toEqual({
+				code: 31,
+				time: { time: 100 },
+				punchType: 7,
+				controlInfo: 0x80,
+				beaconMode: false,
+				radioMode: 2
+			});
+		});
+
+		test('does not leak timeIndex into the reconstructed punches', async () => {
+			const roundTripped = getRaceResultFromOrdered(getOrderedRaceResult(ENRICHED_RACE_RESULT));
+			roundTripped.punches!.forEach((punch) => {
+				expect(punch).not.toHaveProperty('timeIndex');
+			});
+		});
+	});
+
 	describe('monotonizeOrderedRaceResult', () => {
 		test('works for ordered race result', async () => {
 			expect(monotonizeOrderedRaceResult(IMMONOTONE_ORDERED_RACE_RESULT)).toEqual(MONOTONE_ORDERED_RACE_RESULT);
