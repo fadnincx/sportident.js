@@ -1,4 +1,5 @@
 export * from './bytes';
+export * from './charset';
 export * from './errors';
 export * from './events';
 export * from './general';

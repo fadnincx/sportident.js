@@ -298,9 +298,10 @@ export abstract class BaseSiStation<T extends SiTargetMultiplexerTarget> {
 	/** Write personal data to a modern SI card (Card8/9/10/11/SIAC/PCard/TCard).
 	 *  DLL: _cmdSetCardPersonalDataAndFeedbackSignal (modern card path)
 	 *  Data is semicolon-delimited: "FirstName;LastName;Sex;Birthday;Club;Email;Phone;City;Street;Zip;Country;"
-	 *  Written as 4-byte words starting at word address 8, padded with 0xEE. */
+	 *  Written as 4-byte words starting at word address 8, padded with 0xEE.
+	 *  Encoded as CP850, as the official tools write it (ü = 0x81). */
 	writeModernCardPersonalData(personalDataString: string): Promise<void> {
-		const rawBytes = Array.from(personalDataString, (c) => c.charCodeAt(0) & 0xFF);
+		const rawBytes = utils.encodeCp850(personalDataString);
 		const paddedLen = Math.max(4, Math.ceil(rawBytes.length / 4) * 4);
 		const padded = new Array(paddedLen).fill(0xEE);
 		for (let i = 0; i < Math.min(rawBytes.length, paddedLen); i++) {
@@ -335,11 +336,9 @@ export abstract class BaseSiStation<T extends SiTargetMultiplexerTarget> {
 	}): Promise<void> {
 		const padField = (text: string | undefined, length: number): number[] => {
 			const buf = new Array(length).fill(0x20);
-			if (text) {
-				for (let i = 0; i < Math.min(text.length, length); i++) {
-					buf[i] = text.charCodeAt(i) & 0xFF;
-				}
-			}
+			utils.encodeCp850(text ?? '').slice(0, length).forEach((byte, i) => {
+				buf[i] = byte;
+			});
 			return buf;
 		};
 

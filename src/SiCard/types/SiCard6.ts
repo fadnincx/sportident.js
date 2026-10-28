@@ -35,7 +35,7 @@ const getCroppedString = (maybeCharCodes: (number | undefined)[]) => {
 	const isCharacterInvalid = (charCode: number) => charCode === 0x20;
 	const firstInvalidIndex = charCodes.findIndex(isCharacterInvalid);
 	const croppedCharCodes = firstInvalidIndex === -1 ? charCodes : charCodes.slice(0, firstInvalidIndex);
-	return croppedCharCodes.map((charCode: number) => String.fromCharCode(charCode)).join('');
+	return utils.decodeCp850(croppedCharCodes);
 };
 
 export interface ISiCard6StorageFields extends IBaseSiCardStorageFields {

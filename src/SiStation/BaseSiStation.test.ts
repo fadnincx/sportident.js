@@ -350,6 +350,26 @@ describe('SiStation', () => {
 			{ command: proto.cmd.SET_SI8, parameters: [8, 0x61, 0x62, 0x3B, 0xEE] },
 		]);
 	});
+	test('writeModernCardPersonalData encodes umlauts as CP850, as the official tools do', async () => {
+		const sentMessages: { command: number; parameters: number[] }[] = [];
+		const mySiStation = new MySiStation(
+			{
+				sendMessage: (_target: SiTargetMultiplexerTarget, message: siProtocol.SiMessage) => {
+					if (message.mode === undefined) {
+						sentMessages.push({ command: message.command, parameters: message.parameters });
+					}
+					return Promise.resolve([[0x00, 0x00, message.mode === undefined ? message.parameters[0] : 0]]);
+				}
+			} as unknown as ISiTargetMultiplexer,
+			SiTargetMultiplexerTarget.Direct
+		);
+		// as a real SIAC read through a Reader BT stores "Würsten" and "ä"
+		await mySiStation.writeModernCardPersonalData('Wür;ä;');
+		expect(sentMessages).toEqual([
+			{ command: proto.cmd.SET_SI8, parameters: [8, 0x57, 0x81, 0x72, 0x3B] },
+			{ command: proto.cmd.SET_SI8, parameters: [9, 0x84, 0x3B, 0xEE, 0xEE] },
+		]);
+	});
 	test('writeCard6PersonalData sends correct page writes', async () => {
 		const sentMessages: { command: number; parameters: number[] }[] = [];
 		const mySiStation = new MySiStation(
@@ -363,7 +383,7 @@ describe('SiStation', () => {
 			} as unknown as ISiTargetMultiplexer,
 			SiTargetMultiplexerTarget.Direct
 		);
-		await mySiStation.writeCard6PersonalData({ lastName: 'B', firstName: 'A' });
+		await mySiStation.writeCard6PersonalData({ lastName: 'Bü', firstName: 'A' });
 		// Should send 14 commands total: 11 SET_SI6 + 3 SET_SI6_SPECIAL
 		expect(sentMessages.length).toBe(14);
 		// First page: block 0, page 3, lastName padded
@@ -371,7 +391,8 @@ describe('SiStation', () => {
 		expect(sentMessages[0].parameters[0]).toBe(0x00); // block
 		expect(sentMessages[0].parameters[1]).toBe(0x03); // page
 		expect(sentMessages[0].parameters[2]).toBe(0x42); // 'B'
-		expect(sentMessages[0].parameters[3]).toBe(0x20); // space padding
+		expect(sentMessages[0].parameters[3]).toBe(0x81); // 'ü' in CP850
+		expect(sentMessages[0].parameters[4]).toBe(0x20); // space padding
 		// Last 3 commands use SET_SI6_SPECIAL
 		expect(sentMessages[11].command).toBe(proto.cmd.SET_SI6_SPECIAL);
 		expect(sentMessages[12].command).toBe(proto.cmd.SET_SI6_SPECIAL);
