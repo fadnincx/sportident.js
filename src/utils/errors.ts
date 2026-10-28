@@ -5,12 +5,13 @@ export const getErrorOrThrow = (err: unknown): Error | SiError => {
 	return err;
 };
 
-export class SiError {
-	// eslint-disable-next-line no-useless-constructor
-	constructor(
-		public message: string = '',
-		public stack = [] // eslint-disable-next-line no-empty-function
-	) {}
+// Extends Error so String(error), `instanceof Error` and console output work as for any
+// other error; it used to be a plain class and printed as "[object Object]".
+export class SiError extends Error {
+	constructor(message = '') {
+		super(message);
+		this.name = new.target.name;
+	}
 }
 
 export class NotImplementedError extends SiError {}
