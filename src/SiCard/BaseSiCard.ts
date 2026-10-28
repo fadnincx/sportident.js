@@ -21,6 +21,9 @@ export type SiCardType<T extends BaseSiCard> = {
 };
 const initialRegistry: utils.NumberRangeRegistry<SiCardType<BaseSiCard>> = new utils.NumberRangeRegistry();
 
+// fraction of the remaining distance covered per tick when following measurements
+const EXACT_PROGRESS_EASING = 0.25;
+
 export interface ISiMainStation {
 	sendMessage: (message: siProtocol.SiMessage, numResponses?: number, timeoutInMiliseconds?: number) => Promise<number[][]>;
 }
@@ -71,6 +74,8 @@ export abstract class BaseSiCard {
 	private progressTimer?: ReturnType<typeof setInterval>;
 	private lastEmittedPercentage = 0;
 	private currentPhase?: SiCardReadPhase;
+	// last real measurement of the current step, as a percentage of that step
+	private exactStepPercentage?: number;
 
 	constructor(cardNumber: number) {
 		this.raceResult = { cardNumber: cardNumber };
@@ -93,6 +98,7 @@ export abstract class BaseSiCard {
 		this.lastEmittedPercentage = 0;
 		this.stepStartTime = Date.now();
 		this.currentPhase = undefined;
+		this.exactStepPercentage = undefined;
 		const totalSteps = this.getMaxReadSteps();
 
 		this.dispatchEvent('readStart', new SiCardReadStartEvent(this, totalSteps));
@@ -130,10 +136,9 @@ export abstract class BaseSiCard {
 		const basePercent = this.readStep * stepSize;
 		const maxPercent = basePercent + stepSize - 1;
 
-		const elapsed = Date.now() - this.stepStartTime;
-		const progressInStep = Math.min(elapsed / this.getEstimatedStepTimeMs(), 1);
-		const interpolated = Math.round(basePercent + progressInStep * (stepSize - 1));
-		const pct = Math.min(interpolated, maxPercent);
+		const pct = this.expectsExactProgress()
+			? this.getSmoothedProgress(basePercent, stepSize, maxPercent)
+			: this.getClockProgress(basePercent, stepSize, maxPercent);
 
 		if (pct > this.lastEmittedPercentage) {
 			this.lastEmittedPercentage = pct;
@@ -146,6 +151,45 @@ export abstract class BaseSiCard {
 				undefined
 			));
 		}
+	}
+
+	// The clock-only estimate, used when no real measurement is expected.
+	private getClockProgress(basePercent: number, stepSize: number, maxPercent: number): number {
+		const elapsed = Date.now() - this.stepStartTime;
+		const progressInStep = Math.min(elapsed / this.getEstimatedStepTimeMs(), 1);
+		const interpolated = Math.round(basePercent + progressInStep * (stepSize - 1));
+		return Math.min(interpolated, maxPercent);
+	}
+
+	// Blends the clock estimate with real measurements. The guess decays asymptotically
+	// instead of ramping to the ceiling, so it never saturates while a slow transfer is
+	// still running, and the emitted value eases toward the target so a measurement
+	// arriving once per segment glides rather than steps.
+	private getSmoothedProgress(basePercent: number, stepSize: number, maxPercent: number): number {
+		const elapsed = Date.now() - this.stepStartTime;
+		const guessed = basePercent + (1 - Math.exp(-elapsed / this.getEstimatedStepTimeMs())) * (stepSize - 1);
+		const measured = this.exactStepPercentage === undefined ? 0 : basePercent + (this.exactStepPercentage / 100) * (stepSize - 1);
+		const target = Math.min(Math.max(guessed, measured), maxPercent);
+		if (target <= this.lastEmittedPercentage) {
+			return this.lastEmittedPercentage;
+		}
+		const eased = this.lastEmittedPercentage + Math.max(1, (target - this.lastEmittedPercentage) * EXACT_PROGRESS_EASING);
+		return Math.min(Math.round(eased), Math.round(target));
+	}
+
+	// True when the transport can report real transfer progress, which switches the
+	// timer to getSmoothedProgress. False keeps the original clock-only behaviour.
+	protected expectsExactProgress(): boolean {
+		return false;
+	}
+
+	// Records how far the current step has got, as a percentage of that step. Does not
+	// dispatch: the timer stays the only emitter, so the line keeps its own cadence and
+	// a measurement behind the clock guess reins it in instead of being discarded.
+	protected emitExactProgress(phase: SiCardReadPhase, percentage: number): void {
+		const pct = Math.max(0, Math.min(100, percentage));
+		this.exactStepPercentage = Math.max(this.exactStepPercentage ?? 0, pct);
+		this.currentPhase = phase;
 	}
 
 	protected emitProgress(phase: SiCardReadPhase, pageNumber?: number): void {
@@ -163,6 +207,8 @@ export abstract class BaseSiCard {
 		this.readStep++;
 		this.stepStartTime = Date.now();
 		this.currentPhase = phase;
+		// measurements are relative to a step
+		this.exactStepPercentage = undefined;
 
 		const totalSteps = this.getMaxReadSteps();
 		const pct = Math.round((this.readStep / totalSteps) * 100);
